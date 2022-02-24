@@ -5,11 +5,41 @@
 #ifndef MPM_SOLVER_ENGINE_H
 #define MPM_SOLVER_ENGINE_H
 
+#include "GridManager.h"
+#include "ParticleManager.h"
 
 
-class MPMEngine {
+namespace MPM {
 
-};
+	
+	class Engine {
+
+
+
+	public:
+		void create();
+		void step();
+		
+
+
+
+
+	private:
+		void p2g();
+		void updateGrid();
+		void g2p();
+		
+
+		
+
+		
+
+
+
+	};
+
+}
+
 
 
 #endif //MPM_SOLVER_ENGINE_H

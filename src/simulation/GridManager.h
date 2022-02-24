@@ -6,7 +6,17 @@
 #define MPM_SOLVER_GRIDMANAGER_H
 
 
+struct GridNode {
+
+};
+
 class GridManager {
+
+
+public:
+
+private:
+
 
 };
 

@@ -35,3 +35,5 @@ cmake-build-debug/
 cmake-build-release/
 .idea/
 build/
+.vs/
+out/
