@@ -14,6 +14,7 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     set(CMAKE_CUDA_ARCHITECTURES 86)
 endif()
 
+
 #process library
 add_subdirectory(external)
 #process source

@@ -1,22 +1,19 @@
 #test directory
 
 
+include_directories(${PROJECT_SOURCE_DIR}/external/eigen-3.4.0/)
 
-add_executable(cuBLAS_test "cuBLAS_test.cu")
-add_executable(cuda_data_type "cuda_data_type.cu")
-#target_include_directories(cuBLAS_test PUBLIC ${CUDA_INCLUDE_DIRS})
-#message("${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
-#message("${CMAKE_CUDA_RUNTIME_LIBRARY}")
-#message("${CUDA_LIBRARIES}")
-#message("${CMAKE_VS_PLATFORM_TOOLSET_CUDA_CUSTOM_DIR}")
-target_link_libraries(cuBLAS_test cublas.lib)
-
+add_executable(test_cuBLAS "test_cuBLAS.cu")
+target_link_libraries(test_cuBLAS cublas.lib)
 set_target_properties(
-        cuBLAS_test
+        test_cuBLAS
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 
-#set_target_properties(cuBLAS_test PROPERTIES
-#        INTERFACE_INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS}
-#        INTERFACE_LINK_LIBRARIES "${CUDA_LIBRARIES};${CUDA_CUFFT_LIBRARIES};${CUDA_CUBLAS_LIBRARIES}"
-#        )
+
+add_executable(test_cuda_data_type "test_cuda_data_type.cu")
+
+add_executable(test_Eigen "test_Eigen.cpp")
+
+
+
