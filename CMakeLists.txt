@@ -12,11 +12,12 @@ set(CMAKE_CUDA_STANDARD 11)
 message("Processing top level CMakeLists.txt")
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 75)
-    #set(CMAKE_CUDA_ARCHITECTURES 86)
+    #set(CMAKE_CUDA_ARCHITECTURES 75)
+    set(CMAKE_CUDA_ARCHITECTURES 86)
 endif()
 
 find_package(OpenGL REQUIRED)
+#find_package(Boost COMPONENTS)
 
 
 #process library
