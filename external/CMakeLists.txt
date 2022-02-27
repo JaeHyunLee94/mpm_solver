@@ -1,8 +1,18 @@
 
 
-#TODO: Partio, cuBLAS
 
-# process Eigen library
-message(${PROJECT_SOURCE_DIR})
-message(${CMAKE_SOURCE_DIR})
+#add_subdirectory(eigen-3.4.0)
+
+add_subdirectory(partio)
+
+#spgrid
+#add_subdirectory(SPGrid)
+
+add_subdirectory(libccd)
+
+#glew
+#add_subdirectory(glew)
+
+#glfw
+add_subdirectory(glfw)
 

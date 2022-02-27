@@ -32,17 +32,17 @@
 
 #pragma once
 
-#include <cmath>
-#include <functional>
-#include <iostream>
-#include <random>
-#include <stdexcept>
-#include <string>
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/cmath"
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/functional"
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/iostream"
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/random"
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/stdexcept"
+#include "../../../../../../../Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.29.30133/include/string"
 
-#include <cuComplex.h>
-#include <cublas_api.h>
-#include <cuda_runtime_api.h>
-#include <library_types.h>
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include/cuComplex.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include/cublas_api.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include/cuda_runtime_api.h"
+#include "../../../../../../../Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include/library_types.h"
 
 // CUDA API error checking
 #define CUDA_CHECK(err)                                                                            \

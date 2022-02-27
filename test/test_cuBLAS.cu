@@ -58,7 +58,7 @@
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 
-#include "cublas_utils.h"
+#include "test_utils/cublas_utils.h"
 
 using data_type = double;
 

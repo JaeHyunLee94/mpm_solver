@@ -1,8 +1,8 @@
 #test directory
 
 
-include_directories(${PROJECT_SOURCE_DIR}/external/eigen-3.4.0/)
 
+#cuBLAS
 add_executable(test_cuBLAS "test_cuBLAS.cu")
 target_link_libraries(test_cuBLAS cublas.lib)
 set_target_properties(
@@ -10,10 +10,36 @@ set_target_properties(
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 
-
 add_executable(test_cuda_data_type "test_cuda_data_type.cu")
 
+
+#Eigen
+include_directories(${PROJECT_SOURCE_DIR}/external/eigen-3.4.0/)
 add_executable(test_Eigen "test_Eigen.cpp")
 
 
+#partio
+include_directories(${PROJECT_SOURCE_DIR}/external/partio/src)
+add_executable(test_partio "test_partio.cpp")
+target_link_libraries(test_partio partio)
 
+
+#libccd
+include_directories(${PROJECT_SOURCE_DIR}/external/libccd/src)
+add_executable(test_libccd "test_libccd.cpp")
+target_link_libraries(test_libccd ccd_static)
+
+
+#glfw
+include_directories(${PROJECT_SOURCE_DIR}/external/glfw/include)
+include_directories(${PROJECT_SOURCE_DIR}/external/glew/include)
+file(GLOB glew_src  "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.h" "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.c")
+add_executable(test_glfw "test_glfw.cpp"  ${glew_src})
+target_link_libraries(test_glfw glfw ${OPENGL_LIBRARIES})
+
+
+#imgui test
+include_directories(${PROJECT_SOURCE_DIR}/external/imgui/)
+file(GLOB_RECURSE IMGUI_SRC "${PROJECT_SOURCE_DIR}/external/imgui/*.cpp" "${PROJECT_SOURCE_DIR}/external/imgui/*.hpp" "${PROJECT_SOURCE_DIR}/external/imgui/*.h")
+add_executable(test_imgui "test_imgui.cpp" ${glew_src} ${IMGUI_SRC} )
+target_link_libraries(test_imgui glfw ${OPENGL_LIBRARIES})
