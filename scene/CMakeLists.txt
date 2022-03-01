@@ -1,6 +1,6 @@
 
 
-add_executable(main "main.cu")
+add_executable(main "main.cu" ${ALL_SRC})
 
 #target_link_libraries(main ${CUDA_CUBLAS_LIBRARIES})
 

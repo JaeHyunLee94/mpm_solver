@@ -18,10 +18,16 @@ endif()
 
 find_package(OpenGL REQUIRED)
 #find_package(Boost COMPONENTS)
+file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
 
-
-#process library
+#process external library
 add_subdirectory(external)
+
+#Eigen
+include_directories(${CMAKE_SOURCE_DIR}/external/eigen-3.4.0/)
+
+
+
 #process source
 add_subdirectory(src)
 #process target
