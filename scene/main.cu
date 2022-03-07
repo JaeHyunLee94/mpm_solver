@@ -9,11 +9,20 @@ int main()
 {
 
 
-    MPM::Engine g_engine;
-    g_engine.create();
+    mpm::Engine g_engine;
+    g_engine.create(1./600,128,1,1,1,1024*4);
+
+    int end_frame =20000;
+    int current_frame=0;
 
 
+    while(current_frame<end_frame){
 
+
+        g_engine.integrate();
+        ++current_frame;
+
+    }
 
 
 

@@ -4,5 +4,11 @@
 
 #include "ParticleManager.h"
 
+mpm::ParticleManager::~ParticleManager() {
 
 
+
+}
+mpm::ParticleManager::ParticleManager(unsigned long long int _particleNum) {
+
+}

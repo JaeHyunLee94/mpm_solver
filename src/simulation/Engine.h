@@ -8,41 +8,47 @@
 #include "GridManager.h"
 #include "ParticleManager.h"
 #include <Eigen/Dense>
+#include "type.h"
 
-namespace MPM {
-
-    using Vec2i = Eigen::Vector2i;
-    using Vec3i = Eigen::Vector3i;
-    using Vec2d = Eigen::Vector2d;
-    using Vec3d = Eigen::Vector3d;
-    using Vec2f = Eigen::Vector2f;
-    using Vec3f = Eigen::Vector3f;
-
-
-    using Mat2i = Eigen::Matrix2i;
-    using Mat3i = Eigen::Matrix3i;
-    using Mat2d = Eigen::Matrix2d;
-    using Mat3d = Eigen::Matrix3d;
-    using Mat2f = Eigen::Matrix2f;
-    using Mat3f = Eigen::Matrix3f;
+namespace mpm {
 
 
     class Engine {
 
 
     public:
-        void create();
-
-        void step();
+        Engine()=default;
+        ~Engine()= default;
+        void create(
+                Scalar _timeStep,
+                unsigned int _gridRes,
+                Scalar _gridLengthX,
+                Scalar _gridLengthY,
+                Scalar _gridLenghtZ,
+                unsigned long long _particleNum
+                );
+        void integrate();
 
 
     private:
+
+        // important function
         void p2g();
-
         void updateGrid();
-
         void g2p();
+        void markGridBoundary();
 
+
+
+        Scalar mTimeStep;
+        //TODO: lower to the grid manager
+        Scalar mGridLengthX,mGridLengthY,mGridLengthZ;
+        unsigned int mGridRes;
+
+        //TODO: lower to the particle manager
+        unsigned long long mParticleNum;
+
+        bool mIsCreated=false;
 
     };
 
