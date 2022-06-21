@@ -15,6 +15,12 @@ int main()
     int end_frame =20000;
     int current_frame=0;
 
+    int deviceCount=0;
+
+    cudaError_t e = cudaGetDeviceCount(&deviceCount);
+    e  == cudaSuccess ? deviceCount : -1;
+
+
 
     while(current_frame<end_frame){
 

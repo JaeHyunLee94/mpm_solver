@@ -7,17 +7,34 @@
 #include <iostream>
 #include <vector>
 #include <array>
-#include "type.h"
+#include "Types.h"
 
 namespace mpm{
 
+
+//TODO: Material Type inheritance or enum?
+enum MaterialType{
+  Water,
+  Snow,
+  Sand,
+  Jelly
+};
+struct Material{
+  MaterialType m_materialType;
+};
+
+struct Water: Material{
+
+};
+
 struct Particle{
 
-  Vec3F mPos;
-  Vec3F mVel;
-  Mat3F mF;
-  Mat3F mAp;//TODO: APIC
-  Scalar mJp;
+  Vec3f m_pos;
+  Vec3f m_vel;
+  Mat3f m_F;
+  Mat3f m_Ap;//TODO: APIC
+  Scalar m_Jp;
+  Material m_material;
 
 };
 
@@ -25,15 +42,15 @@ struct Particle{
 class ParticleManager {
 
  public:
-  explicit ParticleManager(unsigned long long _particleNum);
+  explicit ParticleManager(unsigned int particleNum);
 
   ~ParticleManager();
 
 
 
  private:
-  unsigned long long mParticleNum;
-  Vec3F * mParticleVector= nullptr;
+  unsigned long long _particleNum;
+  Vec3f * _particleVector= nullptr;
 
 
 

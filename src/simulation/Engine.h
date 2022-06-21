@@ -8,25 +8,52 @@
 #include "GridManager.h"
 #include "ParticleManager.h"
 #include <Eigen/Dense>
-#include "type.h"
+#include "Types.h"
 
 namespace mpm {
 
 
-    class Engine {
+  enum Device{
+    CPU,
+    GPU
+  };
+  enum TransferScheme{
+    MLS,
+    FLIP
+  };
+  enum GridBackend{
+    Dense,
+    Sparse
+  };
+  enum IntegrationScheme{
+    Explicit,
+    Implicit
+  };
+
+
+
+
+
+  struct EngineConfig{
+
+    Scalar m_timeStep;
+    unsigned int m_particleNum;
+    bool m_useCflTimeStep;
+    TransferScheme m_transferScheme;
+    IntegrationScheme m_integrationScheme;
+    GridBackend m_gridBackend;
+
+  };
+
+
+    class Engine{
 
 
     public:
         Engine()=default;
+        Engine(EngineConfig engine_config): _engineConfig(engine_config){};
         ~Engine()= default;
-        void create(
-                Scalar _timeStep,
-                unsigned int _gridRes,
-                Scalar _gridLengthX,
-                Scalar _gridLengthY,
-                Scalar _gridLenghtZ,
-                unsigned long long _particleNum
-                );
+        void create(EngineConfig engine_config);
         void integrate();
 
 
@@ -36,17 +63,13 @@ namespace mpm {
         void p2g();
         void updateGrid();
         void g2p();
-        void markGridBoundary();
+
+
+        EngineConfig _engineConfig;
+        GridManager _gridManager;
 
 
 
-        Scalar mTimeStep;
-        //TODO: lower to the grid manager
-        Scalar mGridLengthX,mGridLengthY,mGridLengthZ;
-        unsigned int mGridRes;
-
-        //TODO: lower to the particle manager
-        unsigned long long mParticleNum;
 
         bool mIsCreated=false;
 
