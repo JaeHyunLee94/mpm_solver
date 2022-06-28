@@ -15,6 +15,7 @@ void mpm::Engine::integrate() {
 
 void mpm::Engine::p2g() {
 
+
 }
 
 void mpm::Engine::updateGrid() {
@@ -24,26 +25,17 @@ void mpm::Engine::updateGrid() {
 void mpm::Engine::g2p() {
 
 }
+void mpm::Engine::create(mpm::EngineConfig engine_config) {
 
-void
-mpm::Engine::create(mpm::Scalar _timeStep, unsigned int _gridRes, mpm::Scalar _gridLengthX, mpm::Scalar _gridLengthY,
-                    mpm::Scalar _gridLengthZ, unsigned long long _particleNum) {
-
-
-
-  mTimeStep=_timeStep;
-  mGridRes = _gridRes;
-  mGridLengthX=_gridLengthX;
-  mGridLengthY=_gridLengthY;
-  mGridLengthZ=_gridLengthZ;
-  mParticleNum = _particleNum;
-
-
+  _engineConfig = engine_config;
   mIsCreated=true;
-
-
-
 }
-void mpm::Engine::markGridBoundary() {
 
-}
+
+
+
+
+
+
+
+
