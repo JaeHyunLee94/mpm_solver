@@ -101,7 +101,7 @@ int main()
     int count = 0;
 
 
-    while (!glfwWindowShouldClose(window)) {  //#10
+    while (!glfwWindowShouldClose(window)&&numOfFrames<10) {  //#10
 
 
         double currentTime = glfwGetTime();
