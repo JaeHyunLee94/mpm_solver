@@ -10,7 +10,18 @@ int main()
 
 
     mpm::Engine g_engine;
-    g_engine.create(1./600,128,1,1,1,1024*4);
+    mpm::EngineConfig engine_config{
+        0.01,
+        100,
+        true,
+         mpm::FLIP,
+        mpm::Explicit,
+        mpm::Dense,
+        1000,
+        10,
+        60
+    };
+    g_engine.create(engine_config);
 
     int end_frame =20000;
     int current_frame=0;

@@ -17,6 +17,7 @@ namespace mpm {
     CPU,
     GPU
   };
+
   enum TransferScheme{
     MLS,
     FLIP
@@ -42,6 +43,9 @@ namespace mpm {
     TransferScheme m_transferScheme;
     IntegrationScheme m_integrationScheme;
     GridBackend m_gridBackend;
+    unsigned int m_targetFrame;
+    unsigned int m_targetTime; //in seconds
+    Scalar m_frameRate; //in frames per second
 
   };
 
@@ -51,11 +55,16 @@ namespace mpm {
 
     public:
         Engine()=default;
-        Engine(EngineConfig engine_config): _engineConfig(engine_config){};
+
+
+
+        Engine(EngineConfig engine_config): _engineConfig(engine_config){
+            create(_engineConfig);
+        };
         ~Engine()= default;
         void create(EngineConfig engine_config);
         void integrate();
-
+        unsigned int m_currentFrame;
 
     private:
 
@@ -71,7 +80,7 @@ namespace mpm {
 
 
 
-        bool mIsCreated=false;
+        bool _isCreated=false;
 
     };
 

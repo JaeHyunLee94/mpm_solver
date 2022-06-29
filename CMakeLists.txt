@@ -14,8 +14,8 @@ set(CMAKE_CUDA_STANDARD 11)
 message("Processing top level CMakeLists.txt")
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 75)
-    #set(CMAKE_CUDA_ARCHITECTURES 86)
+    set(CMAKE_CUDA_ARCHITECTURES 75) ## home
+    #set(CMAKE_CUDA_ARCHITECTURES 86) ## lab
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -25,14 +25,11 @@ file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.c
 #process external library
 add_subdirectory(external)
 
-#Eigen
-include_directories(${CMAKE_SOURCE_DIR}/external/eigen-3.4.0/)
-
-
 
 #process source
 add_subdirectory(src)
 #process target
 add_subdirectory(scene)
 
+#process test
 add_subdirectory(test)

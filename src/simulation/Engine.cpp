@@ -28,8 +28,11 @@ void mpm::Engine::g2p() {
 void mpm::Engine::create(mpm::EngineConfig engine_config) {
 
   _engineConfig = engine_config;
-  mIsCreated=true;
+  _isCreated=true;
+
+  m_currentFrame=0;
 }
+
 
 
 

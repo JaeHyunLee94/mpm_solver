@@ -6,6 +6,8 @@
 #define MPM_SOLVER_GRIDMANAGER_H
 
 
+#include <array>
+
 struct GridNode {
 
 };
@@ -14,6 +16,7 @@ class GridManager {
 
 
 public:
+
 
 private:
 
