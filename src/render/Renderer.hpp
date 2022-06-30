@@ -13,8 +13,9 @@
 #include "GUIwrapper.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "../utils/UtilHeader.h"
+//#include "../utils/UtilHeader.h"
 #include "InputHandler.hpp"
+#include "../simulation/Engine.h"
 
 class PhysicsEntity;
 
@@ -82,22 +83,23 @@ public:
 
     GLuint getVAO() const { return m_vao_id;};
 
-    void render();
-    void render(GUIwrapper& gui);
+    void render(mpm::Engine &engine);
+    void render(mpm::Engine &engine,GUIwrapper& gui);
+
 
     void terminate();
 
 
 //    void bindVAO(GLuint vao);
 //    void bindVBO();
-    void registerGraphicsEntity(GraphicsEntity t_graphics_data);
+    //void registerGraphicsEntity(GraphicsEntity t_graphics_data);
 
-    void registerGraphicsEntity(PhysicsEntity *t_physics_entity);
+    //void registerGraphicsEntity(PhysicsEntity *t_physics_entity);
 
 
 private:
 
-    void renderEach(GraphicsEntity &t_graphics_data);
+    //void renderEach(GraphicsEntity &t_graphics_data);
 
     explicit Renderer(const Builder &builder)
             : m_window(builder.m_builder_window), m_camera(builder.m_builder_camera), m_light(builder.m_builder_light),

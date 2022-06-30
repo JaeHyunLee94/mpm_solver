@@ -9,6 +9,7 @@
 #include "ParticleManager.h"
 #include <Eigen/Dense>
 #include "Types.h"
+#include "Entity.h"
 
 namespace mpm {
 

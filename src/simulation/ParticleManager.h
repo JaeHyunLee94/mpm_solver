@@ -43,7 +43,6 @@ class ParticleManager {
 
  public:
   explicit ParticleManager(unsigned int particleNum);
-
   ~ParticleManager();
 
 
