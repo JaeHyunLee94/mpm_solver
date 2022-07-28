@@ -3,7 +3,7 @@
 //
 
 #include "GraphicsEntity.hpp"
-#include "../Physics/PhysicsEntity.hpp"
+
 
 void GraphicsEntity::bind() {
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);

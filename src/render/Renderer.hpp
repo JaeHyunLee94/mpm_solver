@@ -42,7 +42,7 @@ public:
 
         Builder &shader(const char *vt_shader_path, const char *fg_shader_path);
 
-        Builder &init();
+        Builder &init(std::string window_name);
 
         Renderer *build();
 
@@ -83,8 +83,8 @@ public:
 
     GLuint getVAO() const { return m_vao_id;};
 
-    void render(mpm::Engine &engine);
-    void render(mpm::Engine &engine,GUIwrapper& gui);
+//    void render(mpm::Engine &engine);
+    void renderWithGUI(mpm::Engine &engine,GUIwrapper& gui);
 
 
     void terminate();

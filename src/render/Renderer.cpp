@@ -13,31 +13,31 @@ Camera &Renderer::getCamera() {
     return *m_camera;
 }
 
+//
+//void Renderer::render(mpm::Engine &engine) {
+//    glBindVertexArray(m_vao_id);
+//
+//    //TODO: no loop in render function
+//
+//    glClearColor(m_background_color[0],m_background_color[1],m_background_color[2],1.0);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    for (auto &g_data : m_graphics_data) {
+//        renderEach(g_data);
+//    }
+//
+//    glfwPollEvents();
+//    int display_w, display_h;
+//    glfwGetFramebufferSize(m_window, &display_w, &display_h);
+//    glViewport(0, 0, display_w, display_h);
+//    glfwSwapBuffers(m_window);
+//
+//
+//    glBindVertexArray(0);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//}
 
-void Renderer::render(mpm::Engine &engine) {
-    glBindVertexArray(m_vao_id);
-
-    //TODO: no loop in render function
-
-    glClearColor(m_background_color[0],m_background_color[1],m_background_color[2],1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    for (auto &g_data : m_graphics_data) {
-        renderEach(g_data);
-    }
-
-    glfwPollEvents();
-    int display_w, display_h;
-    glfwGetFramebufferSize(m_window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glfwSwapBuffers(m_window);
-
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void Renderer::render(mpm::Engine &engine,GUIwrapper& gui) {
+void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
     glBindVertexArray(m_vao_id);
 
 
@@ -46,9 +46,13 @@ void Renderer::render(mpm::Engine &engine,GUIwrapper& gui) {
 
     glClearColor(m_background_color[0],m_background_color[1],m_background_color[2],1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    for (auto &g_data : m_graphics_data) {
-        renderEach(g_data);
-    }
+
+//    for (auto &g_data : m_graphics_data) {
+//        renderEach(g_data);
+//    }
+
+
+
 
     gui.render();
     glfwPollEvents();
@@ -219,7 +223,7 @@ Renderer *Renderer::Builder::build() {
     return m_renderer;
 }
 
-Renderer::Builder &Renderer::Builder::init() {
+Renderer::Builder &Renderer::Builder::init(std::string window_name) {
 
 #define GLEW_STATIC
 
@@ -245,7 +249,7 @@ Renderer::Builder &Renderer::Builder::init() {
 #endif
 
     // Create window with graphics context
-    m_builder_window = glfwCreateWindow(1280, 1280, "Physics Engine", NULL, NULL);
+    m_builder_window = glfwCreateWindow(1280, 1280, window_name.c_str(), NULL, NULL);
     if (m_builder_window == nullptr) {
         std::cout << "window creation failed\n";
     }

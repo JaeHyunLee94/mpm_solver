@@ -15,7 +15,6 @@ void mpm::Engine::integrate() {
 
 void mpm::Engine::p2g() {
 
-
 }
 
 void mpm::Engine::updateGrid() {
@@ -32,6 +31,23 @@ void mpm::Engine::create(mpm::EngineConfig engine_config) {
 
   m_currentFrame=0;
 }
+void mpm::Engine::addParticles(Particles particles) {
+
+  if(!_isCreated){
+    std::cout<<"Engine is not created yet"<<std::endl;
+    return;
+
+
+  }
+
+  scene_particles.push_back(particles);
+
+
+}
+mpm::EngineConfig mpm::Engine::getEngineConfig() {
+  return _engineConfig;
+}
+
 
 
 

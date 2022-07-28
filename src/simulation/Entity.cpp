@@ -60,3 +60,6 @@ void mpm::Entity::logEntity() {
   }
 
 }
+std::vector<mpm::Vec3f> &mpm::Entity::getPositionVector() {
+  return _point_list;
+}

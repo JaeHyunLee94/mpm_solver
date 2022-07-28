@@ -56,3 +56,7 @@ file(GLOB_RECURSE IMGUI_SRC "${PROJECT_SOURCE_DIR}/external/imgui/*.cpp" "${PROJ
 add_executable(test_imgui "test_imgui.cpp" ${glew_src} ${IMGUI_SRC} )
 target_link_libraries(test_imgui glfw ${OPENGL_LIBRARIES})
 add_test(test_imgui test_imgui)
+
+#libigl test
+include_directories(${PROJECT_SOURCE_DIR}/external/libigl/include)
+add_executable(test_libigl "test_libigl.cpp")
