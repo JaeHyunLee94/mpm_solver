@@ -60,3 +60,10 @@ add_test(test_imgui test_imgui)
 #libigl test
 include_directories(${PROJECT_SOURCE_DIR}/external/libigl/include)
 add_executable(test_libigl "test_libigl.cpp")
+add_test(test_libigl test_libigl)
+
+
+include_directories(${PROJECT_SOURCE_DIR}/external/fmt/include)
+add_executable(test_fmt "test_fmt.cpp")
+target_link_libraries(test_fmt fmt)
+add_test(test_fmt test_fmt)

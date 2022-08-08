@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <iostream>
+#include <fmt/core.h>
 
 class Camera {
 

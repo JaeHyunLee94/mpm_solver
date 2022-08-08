@@ -15,4 +15,6 @@ add_subdirectory(libccd)
 
 #glfw
 add_subdirectory(glfw)
+#fmt
+add_subdirectory(fmt)
 

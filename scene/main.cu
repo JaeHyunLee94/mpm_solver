@@ -69,7 +69,7 @@ int main()
 
         g_engine.integrate();
         renderer->renderWithGUI(g_engine,guiwrapper);
-        renderer->getCamera().logCameraProperty();
+        //renderer->getCamera().logCameraProperty();
         handler->handleInput();
         ++current_frame;
 
