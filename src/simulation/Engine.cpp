@@ -34,13 +34,15 @@ void mpm::Engine::create(mpm::EngineConfig engine_config) {
 void mpm::Engine::addParticles(Particles particles) {
 
   if(!_isCreated){
-    std::cout<<"Engine is not created yet"<<std::endl;
+    fmt::print("Engine not created yet\n");
+    //std::cout<<"Engine is not created yet"<<std::endl;
     return;
 
 
   }
 
   scene_particles.push_back(particles);
+  fmt::print("particle[tag:{}] added\n", particles.getTag());
 
 
 }

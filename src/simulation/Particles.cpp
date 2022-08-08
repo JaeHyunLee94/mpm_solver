@@ -29,6 +29,9 @@ void mpm::Particles::addParticle(const mpm::Particle& particle) {
 
   _particleList.push_back(particle);
 }
+std::string mpm::Particles::getTag() {
+    return _tag;
+}
 
 
 

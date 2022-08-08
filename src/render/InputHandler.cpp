@@ -76,9 +76,9 @@ void InputHandler::handleInput() {
 
 }
 
-InputHandler::InputHandler(Renderer *renderer,GLFWwindow* m_window):m_pressed(KEYS,false) {
+InputHandler::InputHandler(Renderer *renderer):m_pressed(KEYS,false) {
     this->m_parent_renderer=renderer;
-    this->m_window=m_window;
+    this->m_window=renderer->getWindow();
 
 
     //set callback function

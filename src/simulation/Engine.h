@@ -5,9 +5,10 @@
 #ifndef MPM_SOLVER_ENGINE_H
 #define MPM_SOLVER_ENGINE_H
 
+#include <Eigen/Dense>
+#include <fmt/core.h>
 #include "Particles.h"
 #include "Entity.h"
-#include <Eigen/Dense>
 #include "Types.h"
 #include "Entity.h"
 

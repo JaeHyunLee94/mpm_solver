@@ -18,7 +18,7 @@ class InputHandler {
 
 
 public:
-    InputHandler(Renderer* renderer,GLFWwindow* m_window);
+    InputHandler(Renderer* renderer);
 
 
 

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <fmt/core.h>
 #include "Types.h"
 #include "Entity.h"
 
@@ -49,7 +50,7 @@ class Particles {
     _particleList.resize(0);
   };
   Particles(std::string tag):_tag(tag){
-    printf("%s Particles  created\n", _tag.c_str());
+    fmt::print("tag[{}] Particles  created\n", _tag);
   }
   Particles(Entity &entity, MaterialType material_type,std::string tag):_tag(tag){
     fetchFromEntity(entity, material_type);
@@ -57,13 +58,14 @@ class Particles {
 
   //destructor
   ~Particles() {
-    printf("%s Particles  destroyed\n", _tag.c_str());
+    fmt::print("tag[{}] Particles destroyed\n", _tag);
   }
 
   //member functions
   void fetchFromEntity(Entity& entity, MaterialType material_type);
   void addParticle(const Particle& particle);
   int getParticleNum();
+  std::string getTag();
 
 
 
