@@ -31,7 +31,7 @@ int main() {
                      guiwrapper.getIO().Framerate).endGroup()
       .startGroup("Render Setting")
       .addWidgetColorEdit3("BackGround Color", renderer->m_background_color)
-      .addWidgetColorEdit3("Default Entity Color", renderer->m_default_color_diffuse)
+      .addWidgetColorEdit3("Default Entity Color", renderer->m_default_particle_color)
       .addCheckBox("Draw Wire Frame", &renderer->m_is_draw_wireframe)
       .endGroup()
       .startGroup("Physics setting")

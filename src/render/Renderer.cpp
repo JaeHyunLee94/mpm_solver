@@ -52,6 +52,44 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
 //    }
 
 
+//    //t_graphics_data.logGraphicsData();
+//    //TODO: glbufferdata 로 넣어주기
+//
+//    //camera property
+    m_shader->setUniform("eyepos", m_camera->getCameraPos());
+//    //debug_glCheckError("shader camera pos error");
+//    //light property
+    m_shader->setUniform("lightdir", m_light->m_direction);
+    m_shader->setUniform("Sd", m_light->m_diffColor);
+    m_shader->setUniform("Ss", m_light->m_specColor);
+    m_shader->setUniform("Sa", m_light->m_ambColor);
+//
+//    //debug_glCheckError("shader light property error");
+//    //material property
+//    if(!t_graphics_data.m_has_material){
+//        m_shader->setUniform("Kd",glm::vec3(m_default_color_diffuse[0],m_default_color_diffuse[1],m_default_color_diffuse[2]));
+//    }
+//    m_shader->setUniform("Ka", glm::vec3(0., 0., 0.0));
+//    m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
+//    m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
+//    m_shader->setUniform("sh", 0.01);
+//
+//
+//    auto t_translateMatrix = glm::translate(glm::mat4(1.0f), t_graphics_data.m_mirror_pe->getPos());
+//    auto t_rotateMatrix = glm::mat4(1);//TODO
+//
+//
+//    //debug_glCheckError("shader material property error");
+//    m_shader->setUniform("modelMat", t_translateMatrix * t_rotateMatrix);
+//    m_shader->setUniform("viewMat", m_camera->getViewMatrix());
+//    m_shader->setUniform("projMat", m_camera->getProjectionMatrix());
+//    glBindBuffer(GL_ARRAY_BUFFER, t_graphics_data.m_VBO);
+//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, t_graphics_data.m_EBO);
+//
+//
+//    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+//    glDrawElements(GL_TRIANGLES, t_graphics_data.m_indices->size() * 3, GL_UNSIGNED_INT, (void *) 0);
+
 
 
     gui.render();
