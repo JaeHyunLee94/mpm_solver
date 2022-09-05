@@ -64,15 +64,15 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
     m_shader->setUniform("Ss", m_light->m_specColor);
     m_shader->setUniform("Sa", m_light->m_ambColor);
 //
-//    //debug_glCheckError("shader light property error");
+      debug_glCheckError("shader light property error");
 //    //material property
 //    if(!t_graphics_data.m_has_material){
 //        m_shader->setUniform("Kd",glm::vec3(m_default_color_diffuse[0],m_default_color_diffuse[1],m_default_color_diffuse[2]));
 //    }
-//    m_shader->setUniform("Ka", glm::vec3(0., 0., 0.0));
-//    m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
-//    m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
-//    m_shader->setUniform("sh", 0.01);
+    m_shader->setUniform("Ka", glm::vec3(0., 0., 0.0));
+    m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
+    m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
+    m_shader->setUniform("sh", 0.01);
 //
 //
 //    auto t_translateMatrix = glm::translate(glm::mat4(1.0f), t_graphics_data.m_mirror_pe->getPos());
@@ -80,17 +80,41 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
 //
 //
 //    //debug_glCheckError("shader material property error");
-//    m_shader->setUniform("modelMat", t_translateMatrix * t_rotateMatrix);
-//    m_shader->setUniform("viewMat", m_camera->getViewMatrix());
-//    m_shader->setUniform("projMat", m_camera->getProjectionMatrix());
+    m_shader->setUniform("modelMat", glm::mat4(1.0f));
+    m_shader->setUniform("viewMat", m_camera->getViewMatrix());
+    m_shader->setUniform("projMat", m_camera->getProjectionMatrix());
 //    glBindBuffer(GL_ARRAY_BUFFER, t_graphics_data.m_VBO);
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, t_graphics_data.m_EBO);
 //
 //
-//    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-//    glDrawElements(GL_TRIANGLES, t_graphics_data.m_indices->size() * 3, GL_UNSIGNED_INT, (void *) 0);
+    m_sphere_mesh.bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (m_sphere_mesh.getVertexCount()*sizeof(glm::vec3)));
+    glEnableVertexAttribArray(2);
+    auto particles = engine.getSceneParticles();
 
+    glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
+    glBufferData(GL_ARRAY_BUFFER, engine.getAllParticlesCount()*sizeof(mpm::Particle), nullptr, GL_DYNAMIC_DRAW);
+    int bufferSizeCount=0;
+    //buffer fill
+    for(int i=0;i<particles.size();i++){
+     //auto ith_particles = engine.getParticles(i);
+      auto size = engine.getParticles(i).getParticleNum()*sizeof(mpm::Particle);
+      glBufferSubData(GL_ARRAY_BUFFER, bufferSizeCount,  size, engine.getParticles(i).getParticleList().data());
+      bufferSizeCount+= size;
+    }
+    glEnableVertexAttribArray(2);
+  glVertexAttribDivisor(2, 1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (void *) 0);
+//    glEnableVertexAttribArray(2);
 
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+    glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
+                            nullptr, engine.getAllParticlesCount());
+
+  debug_glCheckError("opengl");
 
     gui.render();
     glfwPollEvents();

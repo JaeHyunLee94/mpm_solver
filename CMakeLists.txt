@@ -21,6 +21,7 @@ endif()
 find_package(OpenGL REQUIRED)
 #find_package(Boost COMPONENTS)
 file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
+message("${ALL_SRC}")
 
 #process external library
 add_subdirectory(external)

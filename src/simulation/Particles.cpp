@@ -32,6 +32,9 @@ void mpm::Particles::addParticle(const mpm::Particle& particle) {
 std::string mpm::Particles::getTag() {
     return _tag;
 }
+std::vector<mpm::Particle> &mpm::Particles::getParticleList() {
+  return _particleList;
+}
 
 
 

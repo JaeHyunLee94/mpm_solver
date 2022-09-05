@@ -61,6 +61,9 @@ class Engine {
   void create(EngineConfig engine_config);
   void integrate();
   void addParticles(Particles particles);
+  Particles& getParticles(int i);
+  unsigned int getAllParticlesCount() const;
+  std::vector<Particles>&  getSceneParticles();
   EngineConfig getEngineConfig();
   unsigned int m_currentFrame;
 
@@ -75,6 +78,7 @@ class Engine {
   std::vector<Particles> scene_particles;
 
   bool _isCreated = false;
+  unsigned int _particleCount=0;
 
 };
 

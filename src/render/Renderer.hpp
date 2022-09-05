@@ -10,12 +10,14 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
+#include "Geometry.h"
 #include "GUIwrapper.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 //#include "../utils/UtilHeader.h"
 #include "InputHandler.hpp"
 #include "../simulation/Engine.h"
+#include "../utils/UtilHeader.h"
 
 class PhysicsEntity;
 
@@ -55,9 +57,7 @@ class Renderer {
     GLuint m_builder_vao_id = 0;
 
   };
-  class Sphere{
 
-  };
 
   ~Renderer() {
 
@@ -103,7 +103,8 @@ class Renderer {
 
   explicit Renderer(const Builder &builder)
       : m_window(builder.m_builder_window), m_camera(builder.m_builder_camera), m_light(builder.m_builder_light),
-        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id) {
+        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(2,5,10) {
+    glGenBuffers(1, &m_engine_vbo_id);
   };
 
   /*
@@ -118,8 +119,10 @@ class Renderer {
 
   //TODO: better if this list can be mapped
 
+  SphereMesh m_sphere_mesh;
 
   GLuint m_vao_id;
+  GLuint m_engine_vbo_id;
 
 };
 

@@ -38,9 +38,9 @@ void mpm::Engine::addParticles(Particles particles) {
     //std::cout<<"Engine is not created yet"<<std::endl;
     return;
 
-
   }
 
+  _particleCount+=particles.getParticleNum();
   scene_particles.push_back(particles);
   fmt::print("particle[tag:{}] added\n", particles.getTag());
 
@@ -48,6 +48,15 @@ void mpm::Engine::addParticles(Particles particles) {
 }
 mpm::EngineConfig mpm::Engine::getEngineConfig() {
   return _engineConfig;
+}
+std::vector<mpm::Particles> &mpm::Engine::getSceneParticles() {
+  return scene_particles;
+}
+unsigned int mpm::Engine::getAllParticlesCount() const {
+  return _particleCount;
+}
+mpm::Particles& mpm::Engine::getParticles(int i) {
+  return scene_particles[i];
 }
 
 

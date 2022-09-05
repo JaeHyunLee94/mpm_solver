@@ -58,12 +58,13 @@ class Particles {
 
   //destructor
   ~Particles() {
-    fmt::print("tag[{}] Particles destroyed\n", _tag);
+    //fmt::print("tag[{}] Particles destroyed\n", _tag);
   }
 
   //member functions
   void fetchFromEntity(Entity& entity, MaterialType material_type);
   void addParticle(const Particle& particle);
+  std::vector<Particle>& getParticleList();
   int getParticleNum();
   std::string getTag();
 
