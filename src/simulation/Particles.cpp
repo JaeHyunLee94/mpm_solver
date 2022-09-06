@@ -9,8 +9,8 @@
 //  this->_particleList.emplace_back(Particle{pos, material_type});
 //
 //}
-int mpm::Particles::getParticleNum() {
-  return this->_particleList.size();
+unsigned long long mpm::Particles::getParticleNum() {
+  return mParticleList.size();
 }
 void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType material_type) {
   auto positionVec = entity.getPositionVector();
@@ -21,19 +21,16 @@ void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType mate
     particle.m_Jp=1;
     particle.m_Ap.setZero();
     particle.m_material_type = material_type;
-    this->_particleList.push_back(particle);
+    mParticleList.push_back(particle);
   }
 
 }
 void mpm::Particles::addParticle(const mpm::Particle& particle) {
 
-  _particleList.push_back(particle);
+    mParticleList.push_back(particle);
 }
 std::string mpm::Particles::getTag() {
     return _tag;
-}
-std::vector<mpm::Particle> &mpm::Particles::getParticleList() {
-  return _particleList;
 }
 
 

@@ -24,12 +24,12 @@ void mpm::Entity::loadCube(mpm::Vec3f center, mpm::Scalar len, unsigned int part
   } else {
 
     std::for_each(_point_list.begin(), _point_list.end(), [&](Vec3f &v) {
-      int seed = dis(gen);
+
 
       v = center + Vec3f(
-          (seed / 10000.0f - 0.5f) * len,
-          (seed / 10000.0f - 0.5f) * len,
-          (seed / 10000.0f - 0.5f) * len
+          (dis(gen) / 10000.0f - 0.5f) * len,
+          (dis(gen) / 10000.0f - 0.5f) * len,
+          (dis(gen) / 10000.0f - 0.5f) * len
       );
     });
 

@@ -13,38 +13,15 @@ Camera &Renderer::getCamera() {
     return *m_camera;
 }
 
-//
-//void Renderer::render(mpm::Engine &engine) {
-//    glBindVertexArray(m_vao_id);
-//
-//    //TODO: no loop in render function
-//
-//    glClearColor(m_background_color[0],m_background_color[1],m_background_color[2],1.0);
-//    glClear(GL_COLOR_BUFFER_BIT);
-//    for (auto &g_data : m_graphics_data) {
-//        renderEach(g_data);
-//    }
-//
-//    glfwPollEvents();
-//    int display_w, display_h;
-//    glfwGetFramebufferSize(m_window, &display_w, &display_h);
-//    glViewport(0, 0, display_w, display_h);
-//    glfwSwapBuffers(m_window);
-//
-//
-//    glBindVertexArray(0);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-//}
 
-void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
+void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     glBindVertexArray(m_vao_id);
 
 
     //TODO: no loop in render function
 
-
-    glClearColor(m_background_color[0],m_background_color[1],m_background_color[2],1.0);
+    debug_glCheckError("starting render loop");
+    glClearColor(m_background_color[0], m_background_color[1], m_background_color[2], 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 //    for (auto &g_data : m_graphics_data) {
@@ -56,19 +33,18 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
 //    //TODO: glbufferdata 로 넣어주기
 //
 //    //camera property
+
     m_shader->setUniform("eyepos", m_camera->getCameraPos());
-//    //debug_glCheckError("shader camera pos error");
+
 //    //light property
     m_shader->setUniform("lightdir", m_light->m_direction);
     m_shader->setUniform("Sd", m_light->m_diffColor);
     m_shader->setUniform("Ss", m_light->m_specColor);
     m_shader->setUniform("Sa", m_light->m_ambColor);
-//
-      debug_glCheckError("shader light property error");
-//    //material property
-//    if(!t_graphics_data.m_has_material){
-//        m_shader->setUniform("Kd",glm::vec3(m_default_color_diffuse[0],m_default_color_diffuse[1],m_default_color_diffuse[2]));
-//    }
+
+    debug_glCheckError("shader light property error");
+
+    m_shader->setUniform("Kd",glm::vec3(m_default_particle_color[0],m_default_particle_color[1],m_default_particle_color[2]));
     m_shader->setUniform("Ka", glm::vec3(0., 0., 0.0));
     m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
     m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
@@ -80,6 +56,7 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
 //
 //
 //    //debug_glCheckError("shader material property error");
+    m_shader->setUniform("particle_scale", m_particle_scale);
     m_shader->setUniform("modelMat", glm::mat4(1.0f));
     m_shader->setUniform("viewMat", m_camera->getViewMatrix());
     m_shader->setUniform("projMat", m_camera->getProjectionMatrix());
@@ -91,30 +68,26 @@ void Renderer::renderWithGUI(mpm::Engine &engine,GUIwrapper& gui) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (m_sphere_mesh.getVertexCount()*sizeof(glm::vec3)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *) (m_sphere_mesh.getVertexCount() * sizeof(glm::vec3)));
     glEnableVertexAttribArray(2);
-    auto particles = engine.getSceneParticles();
+
+
 
     glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
-    glBufferData(GL_ARRAY_BUFFER, engine.getAllParticlesCount()*sizeof(mpm::Particle), nullptr, GL_DYNAMIC_DRAW);
-    int bufferSizeCount=0;
-    //buffer fill
-    for(int i=0;i<particles.size();i++){
-     //auto ith_particles = engine.getParticles(i);
-      auto size = engine.getParticles(i).getParticleNum()*sizeof(mpm::Particle);
-      glBufferSubData(GL_ARRAY_BUFFER, bufferSizeCount,  size, engine.getParticles(i).getParticleList().data());
-      bufferSizeCount+= size;
-    }
+    glBufferData(GL_ARRAY_BUFFER, engine.getParticleCount() * sizeof(mpm::Particle), engine.m_sceneParticles.data(), GL_DYNAMIC_DRAW);
+
+
     glEnableVertexAttribArray(2);
-  glVertexAttribDivisor(2, 1);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (void *) 0);
-//    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (GLvoid*) offsetof(mpm::Particle, m_pos));
 
-    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
-                            nullptr, engine.getAllParticlesCount());
+                            nullptr, engine.getParticleCount());
 
-  debug_glCheckError("opengl");
+    debug_glCheckError("opengl");
 
     gui.render();
     glfwPollEvents();
@@ -251,7 +224,7 @@ void Renderer::terminate() {
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    delete(this);
+    delete (this);
 
 }
 
@@ -336,7 +309,7 @@ Renderer::Builder &Renderer::Builder::init(std::string window_name) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
+    debug_glCheckError("end renderer init");
     return *this;
 }
 

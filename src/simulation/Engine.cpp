@@ -6,6 +6,12 @@
 
 
 void mpm::Engine::integrate() {
+//
+//    auto dt =_engineConfig.m_timeStep;
+//    for (auto & m_sceneParticle : m_sceneParticles) {
+//        m_sceneParticle.m_vel += _gravity * dt;
+//        m_sceneParticle.m_pos += dt*m_sceneParticle.m_vel;
+//    }
 
   p2g();
   updateGrid();
@@ -40,8 +46,11 @@ void mpm::Engine::addParticles(Particles particles) {
 
   }
 
-  _particleCount+=particles.getParticleNum();
-  scene_particles.push_back(particles);
+  //TODO: copy
+  for(int i=0;i<particles.getParticleNum();i++){
+    m_sceneParticles.push_back(particles.mParticleList[i]);
+  }
+
   fmt::print("particle[tag:{}] added\n", particles.getTag());
 
 
@@ -49,15 +58,15 @@ void mpm::Engine::addParticles(Particles particles) {
 mpm::EngineConfig mpm::Engine::getEngineConfig() {
   return _engineConfig;
 }
-std::vector<mpm::Particles> &mpm::Engine::getSceneParticles() {
-  return scene_particles;
+
+unsigned int mpm::Engine::getParticleCount() const {
+  return m_sceneParticles.size();
 }
-unsigned int mpm::Engine::getAllParticlesCount() const {
-  return _particleCount;
+
+void mpm::Engine::setGravity(Vec3f gravity) {
+    _gravity=gravity;
 }
-mpm::Particles& mpm::Engine::getParticles(int i) {
-  return scene_particles[i];
-}
+
 
 
 

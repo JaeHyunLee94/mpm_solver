@@ -60,12 +60,12 @@ class Engine {
   //member functions
   void create(EngineConfig engine_config);
   void integrate();
+  void setGravity(Vec3f gravity);
   void addParticles(Particles particles);
-  Particles& getParticles(int i);
-  unsigned int getAllParticlesCount() const;
-  std::vector<Particles>&  getSceneParticles();
+  unsigned int getParticleCount() const;
   EngineConfig getEngineConfig();
   unsigned int m_currentFrame;
+  std::vector<Particle> m_sceneParticles;
 
  private:
 
@@ -75,10 +75,11 @@ class Engine {
   void g2p();
 
   EngineConfig _engineConfig;
-  std::vector<Particles> scene_particles;
+  Vec3f _gravity{0,0,0};
+
 
   bool _isCreated = false;
-  unsigned int _particleCount=0;
+
 
 };
 

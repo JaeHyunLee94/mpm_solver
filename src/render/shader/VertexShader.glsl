@@ -13,12 +13,13 @@ out vec3 v_view;
 
 uniform mat4 modelMat,viewMat,projMat; //model mat unnecessary
 uniform vec3 eyepos;
+uniform float particle_scale;
 
 
 
 void main(){
 
-    vec3 worldPos=vec4(position+particle_pos,1.0).xyz; // world pos
+    vec3 worldPos=vec4(position*particle_scale+particle_pos,1.0).xyz; // world pos
     gl_Position=projMat*viewMat*vec4(worldPos ,1.0);
 
     v_normal=normalize(transpose(inverse(mat3(modelMat)))*normal); //world normal

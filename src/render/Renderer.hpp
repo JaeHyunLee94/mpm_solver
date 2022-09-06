@@ -79,8 +79,8 @@ class Renderer {
 
   float m_background_color[4]{0.45f, 0.55f, 0.60f, 1.00f};
   float m_default_particle_color[4]{0.5, 0.2, 0.1, 1.0};
-  float m_particle_scale = 1;
-  bool m_is_draw_wireframe{false};
+  float m_particle_scale = 0.1;
+//  bool m_is_draw_wireframe{false};
 
   GLuint getVAO() const { return m_vao_id; };
 
@@ -103,8 +103,11 @@ class Renderer {
 
   explicit Renderer(const Builder &builder)
       : m_window(builder.m_builder_window), m_camera(builder.m_builder_camera), m_light(builder.m_builder_light),
-        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(2,5,10) {
-    glGenBuffers(1, &m_engine_vbo_id);
+        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(0.1,5,10) {
+      debug_glCheckError("before genbuffer");
+
+        glGenBuffers(1, &m_engine_vbo_id);
+      debug_glCheckError("after genbuffer");
   };
 
   /*

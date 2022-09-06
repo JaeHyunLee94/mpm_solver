@@ -11,7 +11,7 @@ int main() {
 
   Renderer *renderer = Renderer::Builder()
       .init("MPM Engine") //TODO: window parameter
-      .camera(glm::vec3(0., -2., 0.), glm::vec3(0, 0, 0))
+      .camera(glm::vec3(3., 3., 3), glm::vec3(0, 0, 0))
       .shader("../../src/render/shader/VertexShader.glsl", "../../src/render/shader/FragmentShader.glsl")
       .light(glm::vec3(5., 5., 5.),
              glm::vec3(1., 1., -1.),
@@ -19,6 +19,7 @@ int main() {
              glm::vec3(0.1, 0.1, 0.1),
              glm::vec3(0, 0, 0))
       .build();
+
 
   auto handler = new InputHandler(renderer);
 
@@ -28,11 +29,15 @@ int main() {
       .startGroup("Application Profile")
       .addWidgetText("Application average %.3f ms/frame (%.1f FPS)",
                      1000.0f / guiwrapper.getIO().Framerate,
-                     guiwrapper.getIO().Framerate).endGroup()
+                     guiwrapper.getIO().Framerate)
+      .endGroup()
       .startGroup("Render Setting")
       .addWidgetColorEdit3("BackGround Color", renderer->m_background_color)
-      .addWidgetColorEdit3("Default Entity Color", renderer->m_default_particle_color)
-      .addCheckBox("Draw Wire Frame", &renderer->m_is_draw_wireframe)
+      .addWidgetColorEdit3("Default Particle Color", renderer->m_default_particle_color)
+      .addWidgetSliderFloat("Particle Size", &renderer->m_particle_scale, 0.01f, 1.f)
+      .addWidgetText("Camera Sensitivity")
+      .addWidgetSliderFloat("Camera Translational Sensitivity",&renderer->getCamera().m_t_sensitivity, 0.01f, 0.1f)
+      .addWidgetSliderFloat("Camera Rotational Sensitivity",&renderer->getCamera().m_r_sensitivity, 0.01f, 0.1f)
       .endGroup()
       .startGroup("Physics setting")
       .endGroup()
@@ -40,7 +45,7 @@ int main() {
 
   mpm::Engine g_engine;
   mpm::EngineConfig engine_config{
-      0.01,
+      1e-10,
       true,
       mpm::FLIP,
       mpm::Explicit,
@@ -50,9 +55,10 @@ int main() {
       60
   };
   g_engine.create(engine_config);
+  g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
 
   mpm::Entity entity;
-  entity.loadCube(mpm::Vec3f(0, 0, 0), 3, 1000, false);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 40000, false);
   mpm::Particles particles(entity, mpm::Water, "for debug");
 
   g_engine.addParticles(particles);

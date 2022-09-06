@@ -47,7 +47,7 @@ class Particles {
 
   //constructor
   Particles(){
-    _particleList.resize(0);
+      mParticleList.resize(0);
   };
   Particles(std::string tag):_tag(tag){
     fmt::print("tag[{}] Particles  created\n", _tag);
@@ -64,15 +64,14 @@ class Particles {
   //member functions
   void fetchFromEntity(Entity& entity, MaterialType material_type);
   void addParticle(const Particle& particle);
-  std::vector<Particle>& getParticleList();
-  int getParticleNum();
+  unsigned long long getParticleNum();
   std::string getTag();
-
+  std::vector<Particle> mParticleList;
 
 
  private:
   std::string _tag;
-  std::vector<Particle> _particleList;
+
 
 
 };
