@@ -58,7 +58,7 @@ int main() {
   g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
 
   mpm::Entity entity;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 40000, false);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 1000000, false);
   mpm::Particles particles(entity, mpm::Water, "for debug");
 
   g_engine.addParticles(particles);
