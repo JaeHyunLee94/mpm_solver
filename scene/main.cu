@@ -55,7 +55,7 @@ int main() {
       60
   };
   g_engine.create(engine_config);
-  g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
+  g_engine.setGravity(mpm::Vec3f(0, 0, 0));
 
   mpm::Entity entity;
   entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 1000000, false);
