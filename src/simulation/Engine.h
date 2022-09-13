@@ -34,7 +34,7 @@ enum IntegrationScheme {
 
 struct EngineConfig {
 
-  Scalar m_timeStep;
+  Scalar m_timeStep; //TODO: delete
   bool m_useCflTimeStep;
   TransferScheme m_transferScheme;
   IntegrationScheme m_integrationScheme;
@@ -60,6 +60,7 @@ class Engine {
   //member functions
   void create(EngineConfig engine_config);
   void integrate();
+  void integrate(Scalar dt);
   void setGravity(Vec3f gravity);
   void addParticles(Particles particles);
   unsigned int getParticleCount() const;

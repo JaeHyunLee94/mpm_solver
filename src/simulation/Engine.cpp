@@ -66,6 +66,9 @@ unsigned int mpm::Engine::getParticleCount() const {
 void mpm::Engine::setGravity(Vec3f gravity) {
     _gravity=gravity;
 }
+void mpm::Engine::integrate(mpm::Scalar dt) {
+
+}
 
 
 

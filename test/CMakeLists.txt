@@ -67,3 +67,10 @@ include_directories(${PROJECT_SOURCE_DIR}/external/fmt/include)
 add_executable(test_fmt "test_fmt.cpp")
 target_link_libraries(test_fmt fmt)
 add_test(test_fmt test_fmt)
+
+
+add_executable(test_openmp "test_openmp.cpp")
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(test_openmp PUBLIC OpenMP::OpenMP_CXX)
+endif()
+add_test(test_openmp test_openmp)
