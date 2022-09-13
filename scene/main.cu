@@ -44,7 +44,7 @@ int main() {
 
 
   mpm::EngineConfig engine_config{
-      1e-10,
+
       true,
       mpm::FLIP,
       mpm::Explicit,
@@ -54,11 +54,11 @@ int main() {
       1000,
   };
   mpm::Engine g_engine(engine_config);
-  g_engine.create(engine_config);
+//  g_engine.create(engine_config);
   g_engine.setGravity(mpm::Vec3f(0, 0, 0));
 
   mpm::Entity entity;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.2, 50000, false);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 50000, false);
   mpm::Particles particles(entity, mpm::Water, "for debug");
 
   g_engine.addParticles(particles);
@@ -73,7 +73,7 @@ int main() {
   while (current_frame < end_frame && !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
 
 
-    g_engine.integrate();
+    g_engine.integrate(1e-11);
     renderer->renderWithGUI(g_engine, guiwrapper);
     //renderer->getCamera().logCameraProperty();
     handler->handleInput();
