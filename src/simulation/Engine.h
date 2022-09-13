@@ -69,6 +69,7 @@ class Engine {
   unsigned int getParticleCount() const;
   EngineConfig getEngineConfig();
   unsigned int m_currentFrame;
+  //TODO: inheritance or functor?
   std::vector<Particle> m_sceneParticles;
 
  private:

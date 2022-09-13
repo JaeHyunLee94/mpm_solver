@@ -16,29 +16,28 @@ namespace mpm{
 
 //TODO: Material Type inheritance or enum?
 enum MaterialType{
-  Water,
+  WeaklyCompressibleWater,
   Snow,
   Sand,
   Jelly
 };
-struct Material{
-  MaterialType m_materialType;
-};
 
-struct Water: Material{
 
-};
 
 struct Particle{
-
+  //TODO: AOS ? SOA?
+  Scalar m_mass;
   Vec3f m_pos;
   Vec3f m_vel;
   Mat3f m_F;
-  Mat3f m_Ap;//TODO: APIC
+  Mat3f m_Cp;//TODO: APIC
   Scalar m_Jp;
+  std::function<Mat3f(Mat3f&)> getStress; //return cauchy stress
+  std::function<void(Mat3f&)> project; //project deformation gradient
   MaterialType m_material_type;
 
 };
+
 
 
 class Particles {
@@ -52,8 +51,8 @@ class Particles {
   Particles(std::string tag):_tag(tag){
     fmt::print("tag[{}] Particles  created\n", _tag);
   }
-  Particles(Entity &entity, MaterialType material_type,std::string tag):_tag(tag){
-    fetchFromEntity(entity, material_type);
+  Particles(Entity &entity, MaterialType material_type,Scalar mass,std::string tag):_tag(tag){
+    fetchFromEntity(entity, material_type,mass);
   }
 
   //destructor
@@ -62,7 +61,7 @@ class Particles {
   }
 
   //member functions
-  void fetchFromEntity(Entity& entity, MaterialType material_type);
+  void fetchFromEntity(Entity& entity, MaterialType material_type,Scalar mass);
   void addParticle(const Particle& particle);
   unsigned long long getParticleNum();
   std::string getTag();

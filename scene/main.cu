@@ -59,7 +59,7 @@ int main() {
 
   mpm::Entity entity;
   entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 50000, false);
-  mpm::Particles particles(entity, mpm::Water, "for debug");
+  mpm::Particles particles(entity, mpm::WeaklyCompressibleWater, 1,"for debug"); //populate particles
 
   g_engine.addParticles(particles);
   int end_frame = 20000;

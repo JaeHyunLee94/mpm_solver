@@ -33,12 +33,14 @@ void mpm::Engine::p2g() {
   auto Xp = m_sceneParticles[i].m_pos*_grid.invdx();
   Vec3i base = Xp.cast<int>();
   Vec3f fx = Xp-base.cast<Scalar>();
+  //TODO: bspline function
   std::tuple<Vec3f,Vec3f,Vec3f> w = {0.5 * Vec3f(pow(1.5 -fx[0],2),pow(1.5 -fx[1],2),pow(1.5 -fx[2],2)),
                                      Vec3f(0.75- pow(fx[0]-1,2),0.75- pow(fx[1]-1,2),0.75- pow(fx[2]-1,2)),
-                                     0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[0] - 0.5, 2), pow(fx[0] - 0.5, 2))};
+                                     0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
 
-
+//  Mat3f stress= m_sceneParticles[i].getStress(m_sceneParticles[i].m_F);
+//  Mat3f affine = stress + m_sceneParticles[i].m_mass * m_sceneParticles[i].m_Cp;
 
 
   }
