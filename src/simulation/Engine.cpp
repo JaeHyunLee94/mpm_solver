@@ -3,7 +3,7 @@
 //
 
 #include "Engine.h"
-
+#include <omp.h>
 
 void mpm::Engine::integrate() {
 //
@@ -20,6 +20,17 @@ void mpm::Engine::integrate() {
 }
 
 void mpm::Engine::p2g() {
+//#pragma omp parallel
+//    {
+//
+//    }
+
+  int count = 0;
+#pragma omp parallel num_threads(6)
+  {
+#pragma omp atomic
+    count++;
+  }
 
 }
 
@@ -30,13 +41,13 @@ void mpm::Engine::updateGrid() {
 void mpm::Engine::g2p() {
 
 }
-void mpm::Engine::create(mpm::EngineConfig engine_config) {
-
-  _engineConfig = engine_config;
-  _isCreated=true;
-
-  m_currentFrame=0;
-}
+//void mpm::Engine::create(mpm::EngineConfig engine_config) {
+//
+//  _engineConfig = engine_config;
+//  _isCreated=true;
+//
+//  m_currentFrame=0;
+//}
 void mpm::Engine::addParticles(Particles particles) {
 
   if(!_isCreated){

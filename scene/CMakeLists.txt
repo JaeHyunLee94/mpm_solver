@@ -14,7 +14,10 @@ file(GLOB glew_src  "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.h" "${P
 
 add_executable(main "main.cu" ${ALL_SRC} ${glew_src} ${IMGUI_SRC})
 
-target_link_libraries(main glfw ${OPENGL_LIBRARIES} fmt)
+target_link_libraries(main glfw ${OPENGL_LIBRARIES} fmt OpenMP::OpenMP_CXX)
+#if(OpenMP_CXX_FOUND)
+#    target_link_libraries(main PUBLIC OpenMP::OpenMP_CXX)
+#endif()
 
 set_target_properties(
         main

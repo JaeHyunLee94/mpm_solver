@@ -20,7 +20,6 @@ int main() {
              glm::vec3(0, 0, 0))
       .build();
 
-
   auto handler = new InputHandler(renderer);
 
   GUIwrapper guiwrapper;
@@ -36,24 +35,25 @@ int main() {
       .addWidgetColorEdit3("Default Particle Color", renderer->m_default_particle_color)
       .addWidgetSliderFloat("Particle Size", &renderer->m_particle_scale, 0.01f, 1.f)
       .addWidgetText("Camera Sensitivity")
-      .addWidgetSliderFloat("Camera Translational Sensitivity",&renderer->getCamera().m_t_sensitivity, 0.01f, 0.1f)
-      .addWidgetSliderFloat("Camera Rotational Sensitivity",&renderer->getCamera().m_r_sensitivity, 0.01f, 0.1f)
+      .addWidgetSliderFloat("Camera Translational Sensitivity", &renderer->getCamera().m_t_sensitivity, 0.01f, 0.1f)
+      .addWidgetSliderFloat("Camera Rotational Sensitivity", &renderer->getCamera().m_r_sensitivity, 0.01f, 0.1f)
       .endGroup()
       .startGroup("Physics setting")
       .endGroup()
       .build();
 
-  mpm::Engine g_engine;
+
   mpm::EngineConfig engine_config{
       1e-10,
       true,
       mpm::FLIP,
       mpm::Explicit,
       mpm::Dense,
+      mpm::Vec3i(100, 100, 100),
+      1e-3,
       1000,
-      10,
-      60
   };
+  mpm::Engine g_engine(engine_config);
   g_engine.create(engine_config);
   g_engine.setGravity(mpm::Vec3f(0, 0, 0));
 
