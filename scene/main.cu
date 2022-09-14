@@ -49,7 +49,7 @@ int main() {
       mpm::FLIP,
       mpm::Explicit,
       mpm::Dense,
-      mpm::Vec3i(100, 100, 100),
+      mpm::Vec3i(128, 128, 128),
       1e-2,
       1000,
   };
