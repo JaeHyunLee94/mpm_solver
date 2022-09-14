@@ -83,7 +83,7 @@ class Engine {
   EngineConfig _engineConfig;
   Vec3f _gravity{0,0,0};
   Grid _grid;
-
+  unsigned int bound =3;
   bool _isCreated = false;
 
 

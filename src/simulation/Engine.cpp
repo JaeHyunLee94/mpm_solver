@@ -30,8 +30,8 @@ void mpm::Engine::p2g() {
 //    //fmt::print("{},{},{}\n",m_sceneParticles[i].m_pos.x(),m_sceneParticles[i].m_pos.y(),m_sceneParticles[i].m_pos.z());
 //    m_sceneParticles[i].m_pos =m_sceneParticles[i].m_pos + 1e-4 * m_sceneParticles[i].m_vel;
 
-  auto Xp = m_sceneParticles[i].m_pos*_grid.invdx();
-  Vec3i base = Xp.cast<int>();
+  Vec3f Xp = m_sceneParticles[i].m_pos*_grid.invdx();
+  Vec3i base = (Xp-Vec3f (0.5,0.5,0.5)).cast<int>();
   Vec3f fx = Xp-base.cast<Scalar>();
   //TODO: bspline function
   std::tuple<Vec3f,Vec3f,Vec3f> w = {0.5 * Vec3f(pow(1.5 -fx[0],2),pow(1.5 -fx[1],2),pow(1.5 -fx[2],2)),
@@ -39,8 +39,8 @@ void mpm::Engine::p2g() {
                                      0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
 
-//  Mat3f stress= m_sceneParticles[i].getStress(m_sceneParticles[i].m_F);
-//  Mat3f affine = stress + m_sceneParticles[i].m_mass * m_sceneParticles[i].m_Cp;
+  Mat3f stress= m_sceneParticles[i].getStress(m_sceneParticles[i].m_F);
+  Mat3f affine = stress + m_sceneParticles[i].m_mass * m_sceneParticles[i].m_Cp;
 
 
   }

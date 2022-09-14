@@ -77,8 +77,8 @@ public:
 
     void logCameraProperty() const; //cannot change class member, only can call other const function
 
-    float m_t_sensitivity=0.02;
-    float m_r_sensitivity=0.05;
+    float m_t_sensitivity=0.05;
+    float m_r_sensitivity=0.025;
 
 private:
 

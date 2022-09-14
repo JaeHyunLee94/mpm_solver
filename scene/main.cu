@@ -35,8 +35,8 @@ int main() {
       .addWidgetColorEdit3("Default Particle Color", renderer->m_default_particle_color)
       .addWidgetSliderFloat("Particle Size", &renderer->m_particle_scale, 0.01f, 1.f)
       .addWidgetText("Camera Sensitivity")
-      .addWidgetSliderFloat("Camera Translational Sensitivity", &renderer->getCamera().m_t_sensitivity, 0.01f, 0.1f)
-      .addWidgetSliderFloat("Camera Rotational Sensitivity", &renderer->getCamera().m_r_sensitivity, 0.01f, 0.1f)
+      .addWidgetSliderFloat("Camera Translational Sensitivity", &renderer->getCamera().m_t_sensitivity, 0.01f, 0.2f)
+      .addWidgetSliderFloat("Camera Rotational Sensitivity", &renderer->getCamera().m_r_sensitivity, 0.01f, 0.5f)
       .endGroup()
       .startGroup("Physics setting")
       .endGroup()
@@ -50,7 +50,7 @@ int main() {
       mpm::Explicit,
       mpm::Dense,
       mpm::Vec3i(100, 100, 100),
-      1e-3,
+      1e-2,
       1000,
   };
   mpm::Engine g_engine(engine_config);
