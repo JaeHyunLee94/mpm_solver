@@ -5,62 +5,89 @@
 #include "Engine.h"
 #include <omp.h>
 
-
-
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
-//  for (auto & m_sceneParticle : m_sceneParticles) {
-//    m_sceneParticle.m_vel += _gravity * dt;
-//    m_sceneParticle.m_pos += dt*m_sceneParticle.m_vel;
-//  }
   init();
-  p2g();
-  updateGrid();
-  g2p();
+  p2g(dt);
+  updateGrid(dt);
+  g2p(dt);
 }
 
-void mpm::Engine::p2g() {
-
-
+void mpm::Engine::p2g(Scalar dt) {
 
 #pragma omp parallel for
-  for (int i = 0; i < m_sceneParticles.size(); ++i) {
-//    auto delV = _gravity * 1e-12;
-//    m_sceneParticles[i].m_vel =Vec3f(0,0,-5);
-//    //fmt::print("{},{},{}\n",m_sceneParticles[i].m_pos.x(),m_sceneParticles[i].m_pos.y(),m_sceneParticles[i].m_pos.z());
-//    m_sceneParticles[i].m_pos =m_sceneParticles[i].m_pos + 1e-4 * m_sceneParticles[i].m_vel;
+  for (int p = 0; p < m_sceneParticles.size(); ++p) {
 
-  Vec3f Xp = m_sceneParticles[i].m_pos*_grid.invdx();
-  Vec3i base = (Xp-Vec3f (0.5,0.5,0.5)).cast<int>();
-  Vec3f fx = Xp-base.cast<Scalar>();
-  //TODO: bspline function
-  std::tuple<Vec3f,Vec3f,Vec3f> w = {0.5 * Vec3f(pow(1.5 -fx[0],2),pow(1.5 -fx[1],2),pow(1.5 -fx[2],2)),
-                                     Vec3f(0.75- pow(fx[0]-1,2),0.75- pow(fx[1]-1,2),0.75- pow(fx[2]-1,2)),
-                                     0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
+    Vec3f Xp = m_sceneParticles[p].m_pos * _grid.invdx();
+    Vec3i base = (Xp - Vec3f(0.5, 0.5, 0.5)).cast<int>();
+    Vec3f fx = Xp - base.cast<Scalar>();
+    //TODO: cubic function
+    std::array<Vec3f, 3> w = {0.5 * Vec3f(pow(1.5 - fx[0], 2), pow(1.5 - fx[1], 2), pow(1.5 - fx[2], 2)),
+                              Vec3f(0.75 - pow(fx[0] - 1, 2),
+                                    0.75 - pow(fx[1] - 1, 2),
+                                    0.75 - pow(fx[2] - 1, 2)),
+                              0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
+    Mat3f stress = m_sceneParticles[p].getStress(m_sceneParticles[p].m_F);
+    Mat3f affine = stress + m_sceneParticles[p].m_mass * m_sceneParticles[p].m_Cp; //TODO
 
-  Mat3f stress= m_sceneParticles[i].getStress(m_sceneParticles[i].m_F);
-  Mat3f affine = stress + m_sceneParticles[i].m_mass * m_sceneParticles[i].m_Cp;
+    //Scatter value
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; k++) {
+          Vec3i offset{i, j, k};
+          Scalar weight = w[i][0] * w[j][1] * w[k][2];
+          Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
+          //i * _y_res * _z_res + j * _z_res + k
+          Vec3i grid_index = base + offset;
+          unsigned int idx =
+              grid_index[0] * _grid.getGridDimY() * _grid.getGridDimZ() + grid_index[1] * _grid.getGridDimZ()
+                  + grid_index[2];
+          Scalar mass_frag = weight * m_sceneParticles[p].m_mass;
+          Vec3f momentum_frag = weight * (m_sceneParticles[p].m_mass * m_sceneParticles[p].m_vel + affine * dpos);
 
+#pragma omp atomic
+          _grid.m_mass[idx] += mass_frag;
+#pragma omp atomic
+          _grid.m_vel[idx][0] += momentum_frag[0];
+#pragma omp atomic
+          _grid.m_vel[idx][1] += momentum_frag[1];
+#pragma omp atomic
+          _grid.m_vel[idx][2] += momentum_frag[2];
+
+        }
+      }
+    }
 
   }
 
 }
 
-void mpm::Engine::updateGrid() {
+void mpm::Engine::updateGrid(Scalar dt) {
+  unsigned int x_dim = _grid.getGridDimX();
+  unsigned int y_dim = _grid.getGridDimY();
+  unsigned int z_dim = _grid.getGridDimZ();
 
 #pragma omp parallel for
   for (int i = 0; i < _grid.getGridSize(); ++i) {
+    if (_grid.m_mass[i] > 0) {
+      _grid.m_vel[i] /= _grid.m_mass[i];
+      _grid.m_vel[i] += dt * _gravity;
+    }
+
+    unsigned int xi = i/(y_dim * z_dim);
+
+
 
   }
 
 }
 
-void mpm::Engine::g2p() {
+void mpm::Engine::g2p(Scalar dt) {
 
 }
 
-void mpm::Engine::addParticles(Particles& particles) {
+void mpm::Engine::addParticles(Particles &particles) {
   //TODO: const
   if (!_isCreated) {
     fmt::print("Engine not created yet\n");

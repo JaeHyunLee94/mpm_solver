@@ -77,8 +77,8 @@ class Renderer {
 
   Light &getLight();
 
-  float m_background_color[4]{0.45f, 0.55f, 0.60f, 1.00f};
-  float m_default_particle_color[4]{0.5, 0.2, 0.1, 1.0};
+  float m_background_color[4]{158./256, 289./256, 230./256, 1.00f};
+  float m_default_particle_color[4]{179./256, 104./256, 225./256, 1.0};
   float m_particle_scale = 0.1;
 //  bool m_is_draw_wireframe{false};
 

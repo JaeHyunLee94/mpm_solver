@@ -76,9 +76,9 @@ class Engine {
 
   // important function
   void init();
-  void p2g();
-  void updateGrid();
-  void g2p();
+  void p2g(Scalar dt);
+  void updateGrid(Scalar dt);
+  void g2p(Scalar dt);
 
   EngineConfig _engineConfig;
   Vec3f _gravity{0,0,0};
