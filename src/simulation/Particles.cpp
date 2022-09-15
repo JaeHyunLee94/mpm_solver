@@ -12,14 +12,16 @@
 unsigned long long mpm::Particles::getParticleNum() {
   return mParticleList.size();
 }
-void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType material_type,Scalar mass) {
+void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType material_type,Scalar init_vol,Scalar rho) {
   auto positionVec = entity.getPositionVector();
   for (int i = 0; i < positionVec.size(); i++) {
     Particle particle;
-    particle.m_mass = mass;
+    particle.m_mass = init_vol*rho;
     particle.m_pos = entity.getPositionVector()[i];
+    particle.m_vel.setZero();
     particle.m_F.setIdentity();
-    particle.m_Jp=1;
+    particle.m_Jp=0.85;
+    particle.m_V0=init_vol;
     particle.m_Cp.setZero();
     particle.m_material_type = material_type;
 

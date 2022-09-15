@@ -49,17 +49,19 @@ int main() {
       mpm::FLIP,
       mpm::Explicit,
       mpm::Dense,
-      mpm::Vec3i(128, 128, 128),
-      1e-2,
+      mpm::Vec3i(64, 64, 64),
+      1./64,
       1000,
   };
   mpm::Engine g_engine(engine_config);
 //  g_engine.create(engine_config);
-  g_engine.setGravity(mpm::Vec3f(0, 0, 0));
+  g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
 
   mpm::Entity entity;
   entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 50000, false);
-  mpm::Particles particles(entity, mpm::WeaklyCompressibleWater, 1,"for debug"); //populate particles
+  unsigned int res = g_engine.getEngineConfig().m_gridResolution[0];
+  float grid_dx = g_engine.getEngineConfig().m_gridCellSize;
+  mpm::Particles particles(entity, mpm::WeaklyCompressibleWater, pow(grid_dx*0.5,3),1,"for debug"); //TODO: rho, initvol
 
   g_engine.addParticles(particles);
   int end_frame = 20000;
@@ -73,7 +75,7 @@ int main() {
   while (current_frame < end_frame && !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
 
 
-    g_engine.integrate(1e-11);
+    g_engine.integrate(7e-4);
     renderer->renderWithGUI(g_engine, guiwrapper);
     //renderer->getCamera().logCameraProperty();
     handler->handleInput();

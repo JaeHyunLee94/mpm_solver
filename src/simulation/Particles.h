@@ -33,6 +33,7 @@ struct Particle{
   Mat3f m_F;
   Mat3f m_Cp;//TODO: APIC
   Scalar m_Jp;
+  Scalar m_V0;
   std::function<Mat3f(Particle&)> getStress; //return cauchy stress
   std::function<void(Particle&,Scalar dt)> project; //project deformation gradient
   MaterialType m_material_type;
@@ -52,8 +53,8 @@ class Particles {
   Particles(std::string tag):_tag(tag){
     fmt::print("tag[{}] Particles  created\n", _tag);
   }
-  Particles(Entity &entity, MaterialType material_type,Scalar mass,std::string tag):_tag(tag){
-    fetchFromEntity(entity, material_type,mass);
+  Particles(Entity &entity, MaterialType material_type,Scalar init_vol,Scalar rho,std::string tag):_tag(tag){
+    fetchFromEntity(entity, material_type,init_vol,rho);
   }
 
   //destructor
@@ -62,7 +63,7 @@ class Particles {
   }
 
   //member functions
-  void fetchFromEntity(Entity& entity, MaterialType material_type,Scalar mass);
+  void fetchFromEntity(Entity& entity, MaterialType material_type,Scalar init_vol,Scalar rho);
   void addParticle(const Particle& particle);
   unsigned long long getParticleNum();
   std::string getTag();

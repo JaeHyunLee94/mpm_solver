@@ -67,6 +67,7 @@ class Engine {
   void setGravity(Vec3f gravity);
   void addParticles(Particles& particles);
   unsigned int getParticleCount() const;
+
   EngineConfig getEngineConfig();
   unsigned int m_currentFrame;
   //TODO: inheritance or functor?

@@ -12,6 +12,7 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
+  m_currentFrame++;
 }
 
 void mpm::Engine::p2g(Scalar dt) {
@@ -30,8 +31,9 @@ void mpm::Engine::p2g(Scalar dt) {
                                     0.75 - pow(fx[2] - 1, 2)),
                               0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
-    Mat3f cauchy_stress = particle.getStress(particle);
-    Mat3f stress = 4*dt*cauchy_stress * particle.m_Jp*particle.m_mass /(_grid.dx()*_grid.dx()); //TODO:no mass, volume
+//    Mat3f cauchy_stress = particle.getStress(particle);
+    Mat3f cauchy_stress =  (10 * (pow(1./particle.m_Jp,7)-1))*Mat3f::Identity();
+    Mat3f stress =4*dt*cauchy_stress * particle.m_Jp*particle.m_V0 /(_grid.dx()*_grid.dx()); //TODO:no mass, volume
     Mat3f affine = stress + particle.m_mass * particle.m_Cp; //TODO
 
     //Scatter the quantity
@@ -46,8 +48,8 @@ void mpm::Engine::p2g(Scalar dt) {
           unsigned int idx =
               grid_index[0] * _grid.getGridDimY() * _grid.getGridDimZ() + grid_index[1] * _grid.getGridDimZ()
                   + grid_index[2];
-          Scalar mass_frag = weight * m_sceneParticles[p].m_mass;
-          Vec3f momentum_frag = weight * (m_sceneParticles[p].m_mass * m_sceneParticles[p].m_vel + affine * dpos);
+          Scalar mass_frag = weight * particle.m_mass;
+          Vec3f momentum_frag = weight * (particle.m_mass * particle.m_vel + affine * dpos);
 
 #pragma omp atomic
           _grid.m_mass[idx] += mass_frag;
@@ -84,19 +86,19 @@ void mpm::Engine::updateGrid(Scalar dt) {
     if( xi<bound && _grid.m_vel[i][0] < 0){
       _grid.m_vel[i][0] = 0;
     }
-    if( xi>=x_dim-bound && _grid.m_vel[i][0] > 0){
+    if( xi>x_dim-bound && _grid.m_vel[i][0] > 0){
       _grid.m_vel[i][0] = 0;
     }
     if( yi<bound && _grid.m_vel[i][1] < 0){
       _grid.m_vel[i][1] = 0;
     }
-    if( yi>=y_dim-bound && _grid.m_vel[i][1] > 0){
+    if( yi>y_dim-bound && _grid.m_vel[i][1] > 0){
       _grid.m_vel[i][1] = 0;
     }
     if( zi<bound && _grid.m_vel[i][2] < 0){
       _grid.m_vel[i][2] = 0;
     }
-    if( zi>=z_dim-bound && _grid.m_vel[i][2] > 0){
+    if( zi>z_dim-bound && _grid.m_vel[i][2] > 0){
       _grid.m_vel[i][2] = 0;
     }
 
@@ -110,8 +112,8 @@ void mpm::Engine::g2p(Scalar dt) {
 
 #pragma omp parallel for
   for (int p = 0; p < m_sceneParticles.size(); ++p) {
-
-    Vec3f Xp = m_sceneParticles[p].m_pos * _grid.invdx();
+    auto &particle = m_sceneParticles[p];
+    Vec3f Xp =particle.m_pos * _grid.invdx();
     Vec3i base = (Xp - Vec3f(0.5, 0.5, 0.5)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
@@ -137,18 +139,18 @@ void mpm::Engine::g2p(Scalar dt) {
           Vec3i grid_index = base + offset;
           unsigned int idx = grid_index[0] * _grid.getGridDimY() * _grid.getGridDimZ() + grid_index[1] * _grid.getGridDimZ()+ grid_index[2];
           new_v += weight * _grid.m_vel[idx];
-          new_C += 4*weight*_grid.m_vel[idx]*dpos.transpose();
+          new_C += 4*weight*_grid.m_vel[idx]*dpos.transpose()/(_grid.dx()*_grid.dx());
 
         }
       }
     }
 
-    m_sceneParticles[p].m_vel = new_v;
-    m_sceneParticles[p].m_Cp = new_C;
+    particle.m_vel = new_v;
+    particle.m_Cp = new_C;
 
-    //m_sceneParticles[p].m_pos +=dt*m_sceneParticles[p].m_vel;
-
-
+    particle.m_pos +=dt*particle.m_vel;
+//    particle.project(particle,dt);
+    particle.m_Jp*=1+dt*particle.m_Cp.trace();
 
   }
 
