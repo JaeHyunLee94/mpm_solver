@@ -3,6 +3,7 @@
 //
 
 #include "Engine.h"
+#include "MaterialModel.h"
 #include <omp.h>
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
@@ -18,7 +19,8 @@ void mpm::Engine::p2g(Scalar dt) {
 #pragma omp parallel for
   for (int p = 0; p < m_sceneParticles.size(); ++p) {
 
-    Vec3f Xp = m_sceneParticles[p].m_pos * _grid.invdx();
+    auto &particle = m_sceneParticles[p];
+    Vec3f Xp = particle.m_pos * _grid.invdx();
     Vec3i base = (Xp - Vec3f(0.5, 0.5, 0.5)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
@@ -28,8 +30,9 @@ void mpm::Engine::p2g(Scalar dt) {
                                     0.75 - pow(fx[2] - 1, 2)),
                               0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
-    Mat3f stress = m_sceneParticles[p].getStress(m_sceneParticles[p].m_F);
-    Mat3f affine = stress + m_sceneParticles[p].m_mass * m_sceneParticles[p].m_Cp; //TODO
+    Mat3f cauchy_stress = particle.getStress(particle);
+    Mat3f stress = 4*dt*cauchy_stress * particle.m_Jp*particle.m_mass /(_grid.dx()*_grid.dx()); //TODO:no mass, volume
+    Mat3f affine = stress + particle.m_mass * particle.m_Cp; //TODO
 
     //Scatter the quantity
     for (int i = 0; i < 3; i++) {

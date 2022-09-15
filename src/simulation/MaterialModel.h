@@ -11,23 +11,28 @@ namespace mpm{
 class MaterialModel{
 
  public:
-  static Mat3f getStressWeaklyCompressible(Mat3f& F) {
+  static Scalar bulkModulus;
+  static Scalar gamma;
+
+  static Mat3f getStressWeaklyCompressible(Particle& p) {
     /*
      * TODO: Implement the weakly compressible model
      */
+
+    Scalar pressure = bulkModulus * (pow(1/p.m_Jp,gamma)-1) ;
+    return pressure*Mat3f::Identity();
+  }
+  static Mat3f getNeoHookeanStress(Particle& p) {
     return mpm::Mat3f();
   }
-  static Mat3f getNeoHookeanStress(Mat3f& F) {
-    return mpm::Mat3f();
-  }
 
-  static void projectSand(Mat3f& F) {
+  static void projectSand(Particle& p,Scalar dt) {
 
   }
-  static void projectSnow(Mat3f& F) {
+  static void projectSnow(Particle& p,Scalar dt) {
 
   }
-  static void projectWeaklyCompressible(Mat3f& F) {
+  static void projectWeaklyCompressible(Particle& p,Scalar dt) {
 
   }
 

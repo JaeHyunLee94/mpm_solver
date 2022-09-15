@@ -26,14 +26,15 @@ enum MaterialType{
 
 struct Particle{
   //TODO: AOS ? SOA?
+  //TODO: class
   Scalar m_mass;
   Vec3f m_pos;
   Vec3f m_vel;
   Mat3f m_F;
   Mat3f m_Cp;//TODO: APIC
   Scalar m_Jp;
-  std::function<Mat3f(Mat3f&)> getStress; //return cauchy stress
-  std::function<void(Mat3f&)> project; //project deformation gradient
+  std::function<Mat3f(Particle&)> getStress; //return cauchy stress
+  std::function<void(Particle&,Scalar dt)> project; //project deformation gradient
   MaterialType m_material_type;
 
 };
