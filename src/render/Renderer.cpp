@@ -291,7 +291,7 @@ Renderer::Builder &Renderer::Builder::init(std::string window_name) {
 
     glfwMakeContextCurrent(m_builder_window);
     //TODO:
-    glfwSwapInterval(1); // Enable vsync
+    glfwSwapInterval(0); // Enable vsync
 
     // Initialize OpenGL loader
 

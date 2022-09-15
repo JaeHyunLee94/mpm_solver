@@ -58,9 +58,9 @@ int main() {
   g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
 
   mpm::Entity entity;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 50000, false);
   unsigned int res = g_engine.getEngineConfig().m_gridResolution[0];
   float grid_dx = g_engine.getEngineConfig().m_gridCellSize;
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.5, 2 * (pow(res,3)/4));
   mpm::Particles particles(entity, mpm::WeaklyCompressibleWater, pow(grid_dx*0.5,3),1,"for debug"); //TODO: rho, initvol
 
   g_engine.addParticles(particles);
