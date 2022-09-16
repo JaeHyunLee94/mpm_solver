@@ -3,6 +3,7 @@
 // Interpolated values from the vertex shaders
 in vec3 v_normal;
 in vec3 v_view;
+in vec3 v_light;
 
 
 // Ouput data
@@ -13,7 +14,7 @@ out vec4 frag_color;
 //light property
 uniform vec3 Kd,Ka,Ks,Ke;
 uniform vec3 Sa,Ss,Sd;
-uniform vec3 lightdir;
+
 uniform float sh;
 uniform vec3 particle_color;
 //material property
@@ -25,7 +26,7 @@ void main(){
 
     vec3 normal =  normalize(v_normal);
     vec3 view = normalize(v_view);
-    vec3 light = normalize(lightdir);
+    vec3 light = normalize(v_light);
 
     vec3 diff;
 

@@ -9,7 +9,8 @@ GUIwrapper &GUIwrapper::init(GLFWwindow *window) {
     IMGUI_CHECKVERSION();
     auto cntxt= ImGui::CreateContext();
     ImGui::GetIO();
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     ImGui::SetCurrentContext(cntxt);
@@ -96,7 +97,7 @@ GUIwrapper &GUIwrapper::addWidgetSliderFloat(const char *label, float *v, float 
 
 }
 
-GUIwrapper &GUIwrapper::addCheckBox(const char *label,bool* v) {
+GUIwrapper &GUIwrapper::addWidgetCheckBox(const char *label,bool* v) {
     auto func = [label,v] {
         ImGui::Checkbox(label,v);
     };
@@ -104,6 +105,41 @@ GUIwrapper &GUIwrapper::addCheckBox(const char *label,bool* v) {
     return (*this);
 
 }
+GUIwrapper &GUIwrapper::addWidgetInputFloat3(const char *label, float *v, const char *format, ImGuiInputTextFlags flags) {
+  auto func = [label,v,format,flags] {
+      ImGui::InputFloat3(label,v,format,flags);
+
+  };
+  m_callback_list.push_back(func);
+  return (*this);
+}
+GUIwrapper &GUIwrapper::addWidgetInputFloat(const char *label,
+                                   float *v,
+                                   float step,
+                                   float step_fast,
+                                   const char *format,
+                                   ImGuiInputTextFlags flags) {
+  auto func = [label,v,step,step_fast,format,flags] {
+    ImGui::InputFloat(label,v,step,step_fast,format,flags);
+
+  };
+  m_callback_list.push_back(func);
+  return (*this);
+}
+GUIwrapper &GUIwrapper::addWidgetSliderFloat3(const char *label,
+                                              float *v,
+                                              float v_min,
+                                              float v_max,
+                                              const char *format,
+                                              ImGuiSliderFlags flags) {
+    auto func = [label,v,v_min,v_max,format,flags] {
+        ImGui::SliderFloat3(label,v,v_min,v_max,format,flags);
+
+    };
+  m_callback_list.push_back(func);
+  return (*this);
+}
+
 
 
 

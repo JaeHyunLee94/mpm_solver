@@ -7,6 +7,7 @@ layout(location = 2) in vec3 particle_pos;//particle pos
 
 out vec3 v_normal;
 out vec3 v_view;
+out vec3 v_light;
 
 
 
@@ -14,7 +15,7 @@ out vec3 v_view;
 uniform mat4 modelMat,viewMat,projMat; //model mat unnecessary
 uniform vec3 eyepos;
 uniform float particle_scale;
-
+uniform vec3 lightsrc;
 
 
 void main(){
@@ -24,6 +25,7 @@ void main(){
 
     v_normal=normalize(transpose(inverse(mat3(modelMat)))*normal); //world normal
     v_view=normalize(eyepos-worldPos); //view vector
+    v_light=normalize(worldPos-lightsrc); //light vector
 
 
 

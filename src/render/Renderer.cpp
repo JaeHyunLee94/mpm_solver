@@ -37,7 +37,7 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     m_shader->setUniform("eyepos", m_camera->getCameraPos());
 
 //    //light property
-    m_shader->setUniform("lightdir", m_light->m_direction);
+    m_shader->setUniform("lightsrc", m_light->m_srcpos);
     m_shader->setUniform("Sd", m_light->m_diffColor);
     m_shader->setUniform("Ss", m_light->m_specColor);
     m_shader->setUniform("Sa", m_light->m_ambColor);
@@ -242,9 +242,9 @@ Renderer::Builder &Renderer::Builder::camera(glm::vec3 camera_pos,
 }
 
 Renderer::Builder &
-Renderer::Builder::light(const glm::vec3 &src_pos, const glm::vec3 &light_dir, const glm::vec3 &diff_color,
+Renderer::Builder::light(const glm::vec3 &src_pos, const glm::vec3 &diff_color,
                          const glm::vec3 &spec_color, const glm::vec3 &amb_color) {
-    m_builder_light = new Light(src_pos, light_dir, diff_color, spec_color, amb_color);
+    m_builder_light = new Light(src_pos, diff_color, spec_color, amb_color);
     return *this;
 }
 

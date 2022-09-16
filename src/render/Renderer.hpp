@@ -37,7 +37,7 @@ class Renderer {
            float z_near = 0.1,
            float z_far = 1000); // TODO: need camera explicitly?
 
-    Builder &light(const glm::vec3 &src_pos, const glm::vec3 &light_dir, const glm::vec3 &diff_color,
+    Builder &light(const glm::vec3 &src_pos, const glm::vec3 &diff_color,
                    const glm::vec3 &spec_color, const glm::vec3 &amb_color);
 
     Builder &shader(const char *vt_shader_path, const char *fg_shader_path);

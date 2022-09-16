@@ -9,6 +9,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <fmt/core.h>
+#include "glm/gtc/type_ptr.hpp"
 
 class Camera {
 
@@ -47,6 +48,7 @@ public:
     inline glm::mat4 getViewMatrix() { return m_view_matrix; };
     inline glm::mat4 getProjectionMatrix() { return m_projection_matrix; };
     inline glm::vec3 getCameraPos() { return m_camera_pos; };
+    inline float* getCameraPosFloatPtr() { return glm::value_ptr(m_camera_pos); };
     inline float getFovy() { return m_fovy; };
 
     //setFunc

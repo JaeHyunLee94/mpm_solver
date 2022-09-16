@@ -201,6 +201,9 @@ void mpm::Engine::setGravity(Vec3f gravity) {
 void mpm::Engine::init() {
   _grid.resetGrid();
 }
+float *mpm::Engine::getGravityFloatPtr() {
+  return _gravity.data();
+}
 
 
 

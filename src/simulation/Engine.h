@@ -65,6 +65,7 @@ class Engine {
 //  void integrate();
   void integrate(Scalar dt);
   void setGravity(Vec3f gravity);
+  float* getGravityFloatPtr();
   void addParticles(Particles& particles);
   unsigned int getParticleCount() const;
 
