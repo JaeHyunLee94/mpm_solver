@@ -57,10 +57,10 @@ add_executable(test_imgui "test_imgui.cpp" ${glew_src} ${IMGUI_SRC} )
 target_link_libraries(test_imgui glfw ${OPENGL_LIBRARIES})
 add_test(test_imgui test_imgui)
 
-#libigl test
-include_directories(${PROJECT_SOURCE_DIR}/external/libigl/include)
-add_executable(test_libigl "test_libigl.cpp")
-add_test(test_libigl test_libigl)
+##libigl test
+#include_directories(${PROJECT_SOURCE_DIR}/external/libigl/include)
+#add_executable(test_libigl "test_libigl.cpp")
+#add_test(test_libigl test_libigl)
 
 
 include_directories(${PROJECT_SOURCE_DIR}/external/fmt/include)

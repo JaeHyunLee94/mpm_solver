@@ -24,23 +24,16 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     glClearColor(m_background_color[0], m_background_color[1], m_background_color[2], 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//    for (auto &g_data : m_graphics_data) {
-//        renderEach(g_data);
-//    }
 
-
-//    //t_graphics_data.logGraphicsData();
-//    //TODO: glbufferdata 로 넣어주기
-//
 //    //camera property
 
     m_shader->setUniform("eyepos", m_camera->getCameraPos());
 
 //    //light property
-    m_shader->setUniform("lightsrc", m_light->m_srcpos);
-    m_shader->setUniform("Sd", m_light->m_diffColor);
-    m_shader->setUniform("Ss", m_light->m_specColor);
-    m_shader->setUniform("Sa", m_light->m_ambColor);
+    m_shader->setUniform("lightsrc", m_light->getLightScrPosVec3());
+    m_shader->setUniform("Sd", m_light->getDiffColor());
+    m_shader->setUniform("Ss", m_light->getSpecColor());
+    m_shader->setUniform("Sa", m_light->getAmbColor());
 
     debug_glCheckError("shader light property error");
 
@@ -49,21 +42,15 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
     m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
     m_shader->setUniform("sh", 0.01);
-//
-//
-//    auto t_translateMatrix = glm::translate(glm::mat4(1.0f), t_graphics_data.m_mirror_pe->getPos());
-//    auto t_rotateMatrix = glm::mat4(1);//TODO
-//
-//
-//    //debug_glCheckError("shader material property error");
+
+
     m_shader->setUniform("particle_scale", m_particle_scale);
     m_shader->setUniform("modelMat", glm::mat4(1.0f));
     m_shader->setUniform("viewMat", m_camera->getViewMatrix());
     m_shader->setUniform("projMat", m_camera->getProjectionMatrix());
-//    glBindBuffer(GL_ARRAY_BUFFER, t_graphics_data.m_VBO);
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, t_graphics_data.m_EBO);
-//
-//
+
+
+    //Particle sphere vbo bind
     m_sphere_mesh.bind();
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
@@ -83,11 +70,11 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (GLvoid*) offsetof(mpm::Particle, m_pos));
 
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //Instance drawing
     glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
                             nullptr, engine.getParticleCount());
 
-    debug_glCheckError("opengl");
+
 
     gui.render();
     glfwPollEvents();

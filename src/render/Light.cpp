@@ -20,3 +20,12 @@ float *Light::getLightScrPosFloatPtr() {
 glm::vec3 Light::getLightScrPosVec3() const {
   return m_srcpos;
 }
+glm::vec3 Light::getDiffColor() const {
+  return m_diffColor;
+}
+glm::vec3 Light::getSpecColor() const {
+  return m_specColor;
+}
+glm::vec3 Light::getAmbColor() const {
+  return m_ambColor;
+}

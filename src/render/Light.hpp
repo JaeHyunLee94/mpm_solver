@@ -20,6 +20,9 @@ public:
     float* getLightScrPosFloatPtr();
     glm::vec3 getLightScrPosVec3() const;
 
+    glm::vec3 getDiffColor() const;
+    glm::vec3 getSpecColor() const;
+    glm::vec3 getAmbColor() const;
     void logLightProperty() const;
 
 
