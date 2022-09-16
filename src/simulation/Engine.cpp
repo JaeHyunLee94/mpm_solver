@@ -85,29 +85,33 @@ void mpm::Engine::updateGrid(Scalar dt) {
     if (_grid.m_mass[i] > 0) {
       _grid.m_vel[i] /= _grid.m_mass[i];
       _grid.m_vel[i] += dt * _gravity;
+
+      unsigned int xi = i/(y_dim * z_dim);
+      unsigned int yi = (i - xi * y_dim * z_dim)/z_dim;
+      unsigned int zi = i - xi * y_dim * z_dim - yi * z_dim;
+      if( xi<bound && _grid.m_vel[i][0] < 0){
+        _grid.m_vel[i][0] = 0;
+      }
+      if( xi>x_dim-bound && _grid.m_vel[i][0] > 0){
+        _grid.m_vel[i][0] = 0;
+      }
+      if( yi<bound && _grid.m_vel[i][1] < 0){
+        _grid.m_vel[i][1] = 0;
+      }
+      if( yi>y_dim-bound && _grid.m_vel[i][1] > 0){
+        _grid.m_vel[i][1] = 0;
+      }
+      if( zi<bound && _grid.m_vel[i][2] < 0){
+        _grid.m_vel[i][2] = 0;
+      }
+      if( zi>z_dim-bound && _grid.m_vel[i][2] > 0){
+        _grid.m_vel[i][2] = 0;
+      }
+
+
     }
 
-    unsigned int xi = i/(y_dim * z_dim);
-    unsigned int yi = (i - xi * y_dim * z_dim)/z_dim;
-    unsigned int zi = i - xi * y_dim * z_dim - yi * z_dim;
-    if( xi<bound && _grid.m_vel[i][0] < 0){
-      _grid.m_vel[i][0] = 0;
-    }
-    if( xi>x_dim-bound && _grid.m_vel[i][0] > 0){
-      _grid.m_vel[i][0] = 0;
-    }
-    if( yi<bound && _grid.m_vel[i][1] < 0){
-      _grid.m_vel[i][1] = 0;
-    }
-    if( yi>y_dim-bound && _grid.m_vel[i][1] > 0){
-      _grid.m_vel[i][1] = 0;
-    }
-    if( zi<bound && _grid.m_vel[i][2] < 0){
-      _grid.m_vel[i][2] = 0;
-    }
-    if( zi>z_dim-bound && _grid.m_vel[i][2] > 0){
-      _grid.m_vel[i][2] = 0;
-    }
+
 
 
   }
