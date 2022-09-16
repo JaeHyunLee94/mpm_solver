@@ -53,11 +53,7 @@ int main() {
         .addWidgetSliderFloat("Camera Translational Sensitivity", &renderer->getCamera().m_t_sensitivity, 0.01f, 0.2f)
         .addWidgetSliderFloat("Camera Rotational Sensitivity", &renderer->getCamera().m_r_sensitivity, 0.01f, 0.5f)
         .addWidgetInputFloat3("Camera Position", renderer->getCamera().getCameraPosFloatPtr())
-
         .addWidgetInputFloat3("Light Src Position", renderer->getLight().getLightScrPosFloatPtr())
-        .addWidgetText("Light Src Position: (%1.1f,%1.1f,%1.1f)" ,renderer->getLight().getLightScrPosFloatPtr()[0],
-                       renderer->getLight().getLightScrPosFloatPtr()[1], renderer->getLight().getLightScrPosFloatPtr()[2])
-
         .endGroup()
       .startGroup("Physics setting")
         .addWidgetSliderFloat3("Gravity setting",g_engine.getGravityFloatPtr(),-10,10)
