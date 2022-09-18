@@ -53,7 +53,7 @@ class Engine {
   _engineConfig(engine_config),
   _grid(engine_config.m_gridResolution(0),engine_config.m_gridResolution(1),engine_config.m_gridResolution(2),engine_config.m_gridCellSize),
   _isCreated(true),
-  m_currentFrame(0)
+  _currentFrame(0)
   {
 
   };
@@ -68,9 +68,10 @@ class Engine {
   float* getGravityFloatPtr();
   void addParticles(Particles& particles);
   unsigned int getParticleCount() const;
+  inline unsigned long long getCurrentFrame() const{return _currentFrame;}
 
   EngineConfig getEngineConfig();
-  unsigned int m_currentFrame;
+
   //TODO: inheritance or functor?
   std::vector<Particle> m_sceneParticles;
 
@@ -87,6 +88,7 @@ class Engine {
   Grid _grid;
   unsigned int bound =3;
   bool _isCreated = false;
+  unsigned long long _currentFrame;
 
 
 };

@@ -12,7 +12,7 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
-  m_currentFrame++;
+  _currentFrame++;
 }
 
 void mpm::Engine::p2g(Scalar dt) {
