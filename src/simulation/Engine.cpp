@@ -34,7 +34,8 @@ void mpm::Engine::p2g(Scalar dt) {
 
 //    Mat3f cauchy_stress = particle.getStress(particle);
 ////TODO: optimization candidate: multiplication of matrix can be expensive.
-    Mat3f cauchy_stress =  (10 * (pow(1./particle.m_Jp,7)-1))*Mat3f::Identity();
+    Mat3f cauchy_stress = particle.getStress(particle);
+//    Mat3f cauchy_stress =  (10 * (pow(1./particle.m_Jp,7)-1))*Mat3f::Identity();
     Mat3f stress =4*dt*cauchy_stress * particle.m_Jp*particle.m_V0 /(_grid.dx()*_grid.dx()); ////TODO: optimization candidate: use inv_dx rather than dx
     Mat3f affine = stress + particle.m_mass * particle.m_Cp;
 
@@ -160,8 +161,9 @@ void mpm::Engine::g2p(Scalar dt) {
     particle.m_Cp = new_C;
 
     particle.m_pos +=dt*particle.m_vel;
-//    particle.project(particle,dt);
-    particle.m_Jp*=1+dt*particle.m_Cp.trace();
+
+    particle.project(particle,dt);
+
 
   }
 

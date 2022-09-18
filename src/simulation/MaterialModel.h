@@ -19,9 +19,11 @@ class MaterialModel{
     /*
      * TODO: Implement the weakly compressible model
      */
+//      printf("D\n");
+   Scalar pressure = (10 * (pow(1./p.m_Jp,7)-1)) ;
 
-    Scalar pressure = 10 * (pow(1/p.m_Jp,7)-1) ;
-    return pressure*Mat3f::Identity();
+    return  pressure*Mat3f::Identity();
+
   }
   static Mat3f getNeoHookeanStress(Particle& p) {
     return mpm::Mat3f();

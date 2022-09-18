@@ -19,10 +19,9 @@ int main() {
              glm::vec3(0, 0, 0))
       .build();
 
-  auto handler = new InputHandler(renderer);
+  InputHandler handler =  InputHandler(renderer);
 
   mpm::EngineConfig engine_config{
-
       true,
       mpm::MLS,
       mpm::Explicit,
@@ -66,10 +65,6 @@ int main() {
       .startGroup("Physics setting")
         .addWidgetSliderFloat3("Gravity setting",g_engine.getGravityFloatPtr(),-10,10)
       .endGroup()
-//      .startGroup("Plotting window")
-//
-//      .endGroup()
-
       .build();
 
 
@@ -99,8 +94,7 @@ int main() {
 
     g_engine.integrate(7e-4);
     renderer->renderWithGUI(g_engine, guiwrapper);
-    //renderer->getCamera().logCameraProperty();
-    handler->handleInput();
+    handler.handleInput();
     ++current_frame;
 
 
