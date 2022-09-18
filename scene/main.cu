@@ -10,7 +10,7 @@
 int main() {
 
   Renderer *renderer = Renderer::Builder()
-      .init("MPM Engine") //TODO: window parameter
+      .init("MPM Engine",1400,1480) //TODO: window parameter
       .camera(glm::vec3(3., 3., 3), glm::vec3(0, 0, 0))
       .shader("../../src/render/shader/VertexShader.glsl", "../../src/render/shader/FragmentShader.glsl")
       .light(glm::vec3(0.5, 0.5, 15),
@@ -35,7 +35,9 @@ int main() {
 
   g_engine.setGravity(mpm::Vec3f(0, 0, -9.8));
 
-
+  //int   bar_data[11] = {0,1,2,3,4,5,6,7,8,9,10};
+//  static const char* labels1[]    = {"Frogs","Hogs","Dogs","Logs"};
+//  static float data1[]            = {0.15f,  0.30f,  0.2f, 0.05f};
   GUIwrapper guiwrapper;
   guiwrapper
       .init(renderer->getWindow())
@@ -43,6 +45,12 @@ int main() {
         .addWidgetText("Application average %.3f ms/frame (%.1f FPS)",
                      1000.0f / guiwrapper.getIO().Framerate,
                      guiwrapper.getIO().Framerate)
+//      .startPlot("My Plot")
+//      .addPlotBars("My Bar", bar_data, 11)
+//      .endPlot()
+//        .startPlot("My Pie")
+//        .addPieChartPlotPieChart(labels1, data1, 4, 0.5, 0.5, 0.4)
+//        .endPlot()
       .endGroup()
       .startGroup("Render Setting")
         .addWidgetText("Color setting")
@@ -58,6 +66,10 @@ int main() {
       .startGroup("Physics setting")
         .addWidgetSliderFloat3("Gravity setting",g_engine.getGravityFloatPtr(),-10,10)
       .endGroup()
+//      .startGroup("Plotting window")
+//
+//      .endGroup()
+
       .build();
 
 
@@ -78,6 +90,10 @@ int main() {
   cudaError_t e = cudaGetDeviceCount(&deviceCount);
   e == cudaSuccess ? deviceCount : -1;
 
+
+
+
+
   while (current_frame < end_frame && !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
 
 
@@ -86,6 +102,7 @@ int main() {
     //renderer->getCamera().logCameraProperty();
     handler->handleInput();
     ++current_frame;
+
 
   }
 

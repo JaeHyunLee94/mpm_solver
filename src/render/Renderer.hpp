@@ -42,7 +42,7 @@ class Renderer {
 
     Builder &shader(const char *vt_shader_path, const char *fg_shader_path);
 
-    Builder &init(std::string window_name);
+    Builder &init(std::string window_name,int width=1280,int height=1280);
 
     Renderer *build();
 
@@ -55,6 +55,8 @@ class Renderer {
     Light *m_builder_light = nullptr;
     GLFWwindow *m_builder_window = nullptr;
     GLuint m_builder_vao_id = 0;
+    int m_builder_width;
+    int m_builder_height;
 
   };
 
@@ -103,7 +105,8 @@ class Renderer {
 
   explicit Renderer(const Builder &builder)
       : m_window(builder.m_builder_window), m_camera(builder.m_builder_camera), m_light(builder.m_builder_light),
-        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(0.1,5,10) {
+        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(0.1,5,10),
+        m_window_width(builder.m_builder_width),m_window_height(builder.m_builder_height) {
       debug_glCheckError("before genbuffer");
 
         glGenBuffers(1, &m_engine_vbo_id);
@@ -126,6 +129,8 @@ class Renderer {
 
   GLuint m_vao_id;
   GLuint m_engine_vbo_id;
+  int m_window_width;
+    int m_window_height;
 
 };
 
