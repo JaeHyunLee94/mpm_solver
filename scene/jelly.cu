@@ -15,7 +15,7 @@ mpm::Engine* engine = nullptr;
 
 void initRenderer(){
   renderer = Renderer::Builder()
-      .init("MPM Engine",1400,1480) //TODO: window parameter
+      .init("MPM Engine",1400,1400) //TODO: window parameter
       .camera(glm::vec3(3., 3., 3), glm::vec3(0, 0, 0))
       .shader("../../src/render/shader/VertexShader.glsl", "../../src/render/shader/FragmentShader.glsl")
       .light(glm::vec3(0.5, 0.5, 15),
@@ -33,8 +33,9 @@ void initEngine(mpm::EngineConfig config){
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.3), 0.5, pow(res,3)/4);
-  mpm::Particles particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx*0.5,3),1); //TODO: rho, initvol
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.3, 2*pow(res,3)/4);//pow(res,3)/4
+  //fmt::print("entity size: {}", pow(res,3)/4);
+  mpm::Particles particles(entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx*0.5,3),1,mpm::Vec3f (1,2,0)); //TODO: rho, initvol
 
   engine->addParticles(particles);
 
@@ -81,7 +82,7 @@ void initDevice(){
 void run(){
   while ( !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
 
-    engine->integrate(1e-3);
+    engine->integrate(5e-4);
     renderer->renderWithGUI((*engine), (*gui));
     handler->handleInput();
 

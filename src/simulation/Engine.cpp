@@ -32,13 +32,13 @@ void mpm::Engine::p2g(Scalar dt) {
                                     0.75 - pow(fx[2] - 1, 2)),
                               0.5 * Vec3f(pow(fx[0] - 0.5, 2), pow(fx[1] - 0.5, 2), pow(fx[2] - 0.5, 2))};
 
-//    Mat3f cauchy_stress = particle.getStress(particle);
+
 ////TODO: optimization candidate: multiplication of matrix can be expensive.
-    Mat3f cauchy_stress = particle.getStress(particle);
-//    Mat3f cauchy_stress =  (10 * (pow(1./particle.m_Jp,7)-1))*Mat3f::Identity();
+    Mat3f cauchy_stress = particle.getStress(particle);//TODO: Std::bind
+
+
     Mat3f stress =4*dt*cauchy_stress * particle.m_Jp*particle.m_V0 /(_grid.dx()*_grid.dx()); ////TODO: optimization candidate: use inv_dx rather than dx
     Mat3f affine = stress + particle.m_mass * particle.m_Cp;
-
     //Scatter the quantity
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; ++j) {

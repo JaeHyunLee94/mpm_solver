@@ -15,7 +15,7 @@ void mpm::Entity::loadCube(mpm::Vec3f center, mpm::Scalar len, unsigned int part
 
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dis(0, 9999);
+  std::uniform_real_distribution<float> dis(-0.5f*len, 0.5f*len);
 
   _point_list.resize(particle_num);
 
@@ -23,15 +23,12 @@ void mpm::Entity::loadCube(mpm::Vec3f center, mpm::Scalar len, unsigned int part
     //TODO: implement
   } else {
 
-    std::for_each(_point_list.begin(), _point_list.end(), [&](Vec3f &v) {
+    for(auto& p:_point_list){
+      p = center + Vec3f(dis(gen),dis(gen),dis(gen));
+
+    }
 
 
-      v = center + Vec3f(
-          (dis(gen) / 10000.0f - 0.5f) * len,
-          (dis(gen) / 10000.0f - 0.5f) * len,
-          (dis(gen) / 10000.0f - 0.5f) * len
-      );
-    });
 
   }
   _isEmpty = false;

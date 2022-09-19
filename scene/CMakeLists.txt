@@ -23,3 +23,10 @@ set_target_properties(
         water_fall
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(jelly "jelly.cu" ${ALL_SRC} ${glew_src} ${IMGUI_SRC})
+target_link_libraries(jelly glfw ${OPENGL_LIBRARIES} fmt OpenMP::OpenMP_CXX)
+set_target_properties(
+        jelly
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)

@@ -15,9 +15,9 @@ namespace mpm{
 
 
 //TODO: Material Type inheritance or enum?
-enum MaterialType{
+enum class MaterialType{
   WeaklyCompressibleWater,
-  Snow,
+  CorotatedJelly,
   Sand,
   Jelly
 };
@@ -53,8 +53,8 @@ class Particles {
   Particles(std::string tag):_tag(tag){
     fmt::print("tag[{}] Particles  created\n", _tag);
   }
-  Particles(Entity &entity, MaterialType material_type,Scalar init_vol,Scalar rho,std::string tag):_tag(tag){
-    fetchFromEntity(entity, material_type,init_vol,rho);
+  Particles(Entity &entity, MaterialType material_type,Scalar init_vol,Scalar rho,Vec3f init_vel=Vec3f(0,0,0),std::string tag=""):_tag(tag){
+    fetchFromEntity(entity, material_type,init_vol,rho,init_vel,tag);
   }
 
   //destructor
@@ -63,7 +63,7 @@ class Particles {
   }
 
   //member functions
-  void fetchFromEntity(Entity& entity, MaterialType material_type,Scalar init_vol,Scalar rho);
+  void fetchFromEntity(Entity& entity, MaterialType material_type,Scalar init_vol,Scalar rho,Vec3f init_vel,std::string tag);
   void addParticle(const Particle& particle);
   unsigned long long getParticleNum();
   std::string getTag();
