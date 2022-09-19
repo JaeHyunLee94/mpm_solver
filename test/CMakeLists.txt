@@ -4,7 +4,7 @@ include(CTest)
 #cuda vec add
 add_executable(test_cuda "test_cuda.cu")
 set_target_properties(
-        main
+        test_cuda
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 

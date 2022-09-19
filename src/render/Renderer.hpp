@@ -131,6 +131,7 @@ class Renderer {
   GLuint m_engine_vbo_id;
   int m_window_width;
     int m_window_height;
+    unsigned long long m_current_frame=0;
 
 };
 

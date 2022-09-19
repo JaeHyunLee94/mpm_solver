@@ -9,7 +9,7 @@ GUIwrapper &GUIwrapper::init(GLFWwindow *window) {
   auto cntxt = ImGui::CreateContext();
   ImPlot::CreateContext();
 
-  ImGui::GetIO();
+  m_io_Info=ImGui::GetIO();
   //ImGui::StyleColorsDark();
   ImGui::StyleColorsClassic();
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -26,39 +26,12 @@ void GUIwrapper::render() {
 
   m_io_Info = ImGui::GetIO();
 
-  for (auto call_back: m_callback_list) {
+  for (const auto& call_back: m_callback_list) {
     call_back();
   }
-//  static const char* labels1[]    = {"Frogs","Hogs","Dogs","Logs"};
-//  static float data1[]            = {0.15f,  0.30f,  0.2f, 0.05f};
-//  static ImPlotPieChartFlags flags = 0;
-//  ImGui::SetNextItemWidth(250);
-//  ImGui::DragFloat4("Values", data1, 0.01f, 0, 1);
-//  if ((data1[0] + data1[1] + data1[2] + data1[3]) < 1) {
-//    ImGui::SameLine();
-//
-//  }
-//
-//  if (ImPlot::BeginPlot("##Pie1", ImVec2(250,250), ImPlotFlags_Equal | ImPlotFlags_NoMouseText)) {
-//    ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
-//    ImPlot::SetupAxesLimits(0, 1, 0, 1);
-//    ImPlot::PlotPieChart(labels1, data1, 4, 0.5, 0.5, 0.4, "%.2f", 90, flags);
-//    ImPlot::EndPlot();
-//  }
-//
-//  ImGui::SameLine();
-//
-//  static const char* labels2[]   = {"A","B","C","D","E"};
-//  static int data2[]             = {1,1,2,3,5};
-//
-//  ImPlot::PushColormap(ImPlotColormap_Pastel);
-//  if (ImPlot::BeginPlot("##Pie2", ImVec2(250,250), ImPlotFlags_Equal | ImPlotFlags_NoMouseText)) {
-//    ImPlot::SetupAxes(NULL, NULL, ImPlotAxisFlags_NoDecorations, ImPlotAxisFlags_NoDecorations);
-//    ImPlot::SetupAxesLimits(0, 1, 0, 1);
-//    ImPlot::PlotPieChart(labels2, data2, 5, 0.5, 0.5, 0.4, "%.0f", 180, flags);
-//    ImPlot::EndPlot();
-//  }
-//  ImPlot::PopColormap();
+
+  m_frame_rate = m_io_Info.Framerate;
+  m_average_time=1000.0f / (m_io_Info.Framerate);
 
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
