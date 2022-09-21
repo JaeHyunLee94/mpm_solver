@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 project(
         MPM_SOLVER
@@ -9,7 +9,7 @@ project(
 
 enable_testing()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 11)
 message("Processing top level CMakeLists.txt")
 
@@ -20,8 +20,12 @@ endif()
 
 find_package(OpenGL REQUIRED)
 find_package(OpenMP)
+#find_package(Boost COMPONENTS filesystem REQUIRED)
 #find_package(Boost COMPONENTS)
-file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
+#file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
+#list(APPEND CMAKE_MODULE_PATH "./external/openvdb/cmake/OpenVDB")
+#find_package(OpenVDB REQUIRED)
+
 message("${ALL_SRC}")
 
 #process external library

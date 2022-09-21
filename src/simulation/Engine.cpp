@@ -206,6 +206,21 @@ void mpm::Engine::init() {
 float *mpm::Engine::getGravityFloatPtr() {
   return _gravity.data();
 }
+void mpm::Engine::reset(Particles& particle,EngineConfig engine_config) {
+
+  _engineConfig=engine_config;
+  deleteAllParticle();
+  setGravity(Vec3f(0,0,0));
+  addParticles(particle);
+
+}
+void mpm::Engine::deleteAllParticle() {
+  m_sceneParticles.clear();
+
+}
+void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
+    _engineConfig=engine_config;
+}
 
 
 

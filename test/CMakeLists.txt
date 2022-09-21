@@ -74,3 +74,11 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(test_openmp PUBLIC OpenMP::OpenMP_CXX)
 endif()
 add_test(test_openmp test_openmp)
+
+
+add_executable(test_openvdb "test_openvdb.cpp")
+target_link_libraries(test_openvdb openvdb)
+target_include_directories(test_openvdb PUBLIC ${PROJECT_SOURCE_DIR}/external/openvdb/)
+#add_executable(test_boost test_boost.cpp)
+#target_link_libraries(main ${Boost_LIBRARIES})
+#target_include_directories(test_boost PUBLIC ${Boost_INCLUDE_DIRS})

@@ -64,9 +64,12 @@ class Engine {
   //void create(EngineConfig engine_config);
 //  void integrate();
   void integrate(Scalar dt);
+  void reset(Particles& particle,EngineConfig engine_config);
   void setGravity(Vec3f gravity);
+  void setEngineConfig(EngineConfig engine_config);
   float* getGravityFloatPtr();
   void addParticles(Particles& particles);
+  void deleteAllParticle();
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const{return _currentFrame;}
 

@@ -61,6 +61,19 @@ class GUIwrapper {
                                   float step_fast = 0.0f,
                                   const char *format = "%.3f",
                                   ImGuiInputTextFlags flags = 0);
+  template<typename T,typename... Args>
+  GUIwrapper& addWidgetButton(const char* label, T f,Args &&...args){
+    auto func = [label,f,args...] {
+      if(ImGui::Button(label)) {
+
+        f(args...);
+      }
+
+
+    };
+    m_callback_list.push_back(func);
+    return (*this);
+  }
   GUIwrapper &endGroup();
 
   GUIwrapper &startPlot(const char *title_id, const ImVec2 &size = ImVec2(-1, 0), ImPlotFlags flags = 0);
