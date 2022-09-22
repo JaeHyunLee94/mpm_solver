@@ -221,6 +221,23 @@ void mpm::Engine::deleteAllParticle() {
 void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
     _engineConfig=engine_config;
 }
+void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
+
+  profiler.start("init");
+  init();
+  profiler.endAndReport("init");
+  profiler.start("p2g");
+  p2g(dt);
+  profiler.endAndReport("p2g");
+  profiler.start("updateGrid");
+  updateGrid(dt);
+  profiler.endAndReport("updateGrid");
+  profiler.start("g2p");
+  g2p(dt);
+  profiler.endAndReport("g2p");
+  profiler.makeArray();
+
+}
 
 
 

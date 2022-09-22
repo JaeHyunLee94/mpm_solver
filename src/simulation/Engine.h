@@ -12,6 +12,7 @@
 #include "Types.h"
 #include "Entity.h"
 #include "Grid.h"
+#include "../System/Profiler.h"
 namespace mpm {
 
 enum Device {
@@ -64,6 +65,7 @@ class Engine {
   //void create(EngineConfig engine_config);
 //  void integrate();
   void integrate(Scalar dt);
+  void integrateWithProfile(Scalar dt,Profiler& profiler);
   void reset(Particles& particle,EngineConfig engine_config);
   void setGravity(Vec3f gravity);
   void setEngineConfig(EngineConfig engine_config);

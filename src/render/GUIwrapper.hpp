@@ -13,6 +13,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+
 class GUIwrapper {
  public:
 
@@ -151,16 +152,17 @@ class GUIwrapper {
     return *this;
   }
   template<typename T>
-  GUIwrapper &addPieChartPlotPieChart(const char *const label_ids[],
+  GUIwrapper &addPieChart(const char *const label_ids[],
                                       const T *values,
-                                      int count,
+                                      int& count,
                                       double x,
                                       double y,
                                       double radius,
                                       const char *label_fmt = "%.1f",
                                       double angle0 = 90,
                                       ImPlotPieChartFlags flags = 0) {
-    auto func = [label_ids, values, count, x, y, radius, label_fmt, angle0, flags, this] {
+    int a =1;
+    auto func = [label_ids, values, &count, x, y, radius, label_fmt, angle0, flags, this] {
       if (this->m_is_plot_started) {
         ImPlot::PlotPieChart(label_ids, values, count, x, y, radius, label_fmt, angle0, flags);
       }

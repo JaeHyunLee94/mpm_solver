@@ -2,3 +2,6 @@
 thrust 로 sorting
 thrust is a parallel algorithms library which resembles the C++ Standard Template Library (STL).
 libcu++ ??
+
+
+Profiler --> initial tag add method
