@@ -26,8 +26,8 @@ add_subdirectory(fmt)
 #set(OPENVDB_BUILD_VDB_PRINT OFF CACHE BOOL "")
 #set(OPENVDB_BUILD_VDB_LOD OFF CACHE BOOL "")
 #set(OPENVDB_BUILD_VDB_RENDER OFF CACHE BOOL "")
-find_package(Boost REQUIRED)
-#-DVCPKG_TARGET_TRIPLET=x64-windows-static$CMakeProjectDir$ -DOPENVDB_CORE_SHARED=OFF
-set(OPENVDB_CORE_SHARED OFF)
-add_subdirectory(openvdb)
+#find_package(Boost REQUIRED)
+##-DVCPKG_TARGET_TRIPLET=x64-windows-static$CMakeProjectDir$ -DOPENVDB_CORE_SHARED=OFF
+#set(OPENVDB_CORE_SHARED OFF)
+#add_subdirectory(openvdb)
 
