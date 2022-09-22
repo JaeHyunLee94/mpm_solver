@@ -67,13 +67,11 @@ void initGui() {
       .addWidgetText("Application average %.3f ms/frame (%.1f FPS)",
                      gui->m_average_time, gui->m_frame_rate)
 
-//      .startPlot("My Plot")
-//      .addPlotBars("My Bar", bar_data, 11)
-//      .endPlot()
+
         .startPlot("Integration profile")
         .addPieChart(profiler->getLabelsPtr(), profiler->getValuesPtr(), profiler->getCount(), 0.5, 0.5, 0.4)
         .endPlot()
-//        .addWidgetText("P2G: %.3f ms",(double)profiler->getContainer()["p2g"])
+        .addWidgetText("P2G: %.3f ms",(double)profiler->getContainer()["p2g"])
       .endGroup()
       .startGroup("Render Setting")
       .addWidgetText("Color setting")
@@ -97,7 +95,6 @@ void initGui() {
           1. / 64,
           1000,
       })
-//      .addWidgetButton("Reset", []() { engine->reset(); })
       .endGroup()
       .build();
 }

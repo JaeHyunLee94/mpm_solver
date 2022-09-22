@@ -148,8 +148,11 @@ GUIwrapper &GUIwrapper::startPlot(const char *title_id, const ImVec2 &size, ImPl
 
   auto func = [title_id, size, flags, this] {
 
-    if (ImPlot::BeginPlot(title_id, size, flags)) { this->m_is_plot_started = true; }
-    else { this->m_is_plot_started = false; };
+    if (ImPlot::BeginPlot(title_id, size, flags)) {
+        this->m_is_plot_started = true; }
+    else {
+        this->m_is_plot_started = false;
+    };
   };
 
   m_callback_list.push_back(func);
@@ -160,8 +163,12 @@ GUIwrapper &GUIwrapper::startPlot(const char *title_id, const ImVec2 &size, ImPl
 GUIwrapper &GUIwrapper::endPlot() {
   auto func = [this] {
 
-    ImPlot::EndPlot();
-    this->m_is_plot_started = false;
+      if (this->m_is_plot_started) { 
+          ImPlot::EndPlot();
+          this->m_is_plot_started = false;
+      };
+    
+   
   };
 
 
