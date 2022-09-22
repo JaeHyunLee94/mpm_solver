@@ -78,6 +78,7 @@ class Renderer {
   Shader &getShader();
 
   Light &getLight();
+  inline bool windowShouldClose(){return glfwWindowShouldClose(m_window);};
 
   float m_background_color[4]{158./256, 289./256, 230./256, 1.00f};
   float m_default_particle_color[4]{179./256, 104./256, 225./256, 1.0};

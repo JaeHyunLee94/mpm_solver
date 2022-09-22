@@ -107,7 +107,7 @@ void initDevice() {
 }
 
 void run() {
-  while (!glfwWindowShouldClose((renderer)->getWindow())) { // hide glfw
+  while (!renderer->windowShouldClose()) { // hide glfw
 
     engine->integrateWithProfile(1e-3,*profiler);
     renderer->renderWithGUI(*engine, *gui);
