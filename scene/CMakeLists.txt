@@ -8,6 +8,8 @@ include_directories(${PROJECT_SOURCE_DIR}/external/glew/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/imgui/)
 include_directories(${PROJECT_SOURCE_DIR}/external/glm/)
 include_directories(${PROJECT_SOURCE_DIR}/external/fmt/include/)
+include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 file(GLOB_RECURSE IMGUI_SRC "${PROJECT_SOURCE_DIR}/external/imgui/*.cpp" "${PROJECT_SOURCE_DIR}/external/imgui/*.hpp" "${PROJECT_SOURCE_DIR}/external/imgui/*.h")
 file(GLOB glew_src  "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.h" "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.c")

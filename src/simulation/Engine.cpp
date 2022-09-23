@@ -3,12 +3,12 @@
 //
 
 #include "Engine.h"
-#include "MaterialModel.h"
+#include "MaterialModel.cuh"
 #include <omp.h>
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
-  init();
+  initGrid();
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
@@ -213,7 +213,7 @@ void mpm::Engine::setGravity(Vec3f gravity) {
   _gravity = gravity;
 }
 
-void mpm::Engine::init() {
+void mpm::Engine::initGrid() {
   _grid.resetGrid();
 }
 float* mpm::Engine::getGravityFloatPtr() {
@@ -237,7 +237,7 @@ void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
 void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler& profiler) {
 
   profiler.start("init");
-  init();
+  initGrid();
   profiler.endAndReport("init");
   profiler.start("p2g");
   p2g(dt);
@@ -249,6 +249,18 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler& profiler) {
   g2p(dt);
   profiler.endAndReport("g2p");
   profiler.makeArray();
+
+}
+void mpm::Engine::integrateWithCuda(Scalar dt) {
+
+  transferDataToDevice();
+  //launch kernel
+
+}
+void mpm::Engine::integrateWithCudaAndProfile(mpm::Scalar dt, Profiler &profiler) {
+
+}
+void mpm::Engine::transferDataToDevice() {
 
 }
 

@@ -2,10 +2,13 @@
 // Created by test on 2022-09-13.
 //
 
-#ifndef MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_H_
-#define MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_H_
+#ifndef MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_CUH_
+#define MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_CUH_
 #include "Types.h"
 #include "Particles.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 namespace mpm {
 
 class MaterialModel {
@@ -14,7 +17,7 @@ class MaterialModel {
   static Scalar bulkModulus;
   static Scalar gamma;
 
-  static Mat3f getStressWeaklyCompressibleWater(Particle &p) {
+  static __host__ __device__ Mat3f getStressWeaklyCompressibleWater(Particle &p) {
     /*
      * TODO: Implement the weakly compressible model
      */
@@ -25,7 +28,7 @@ class MaterialModel {
     return pressure * Mat3f::Identity();
 
   }
-  static Mat3f getStressCorotatedJelly(Particle &p) {
+  static __host__ __device__ Mat3f getStressCorotatedJelly(Particle &p) {
     constexpr Scalar E = 1000; //Young's modulus
     constexpr Scalar nu = 0.2;  //# Poisson's ratio
     constexpr Scalar mu_0 = E / (2 * (1 + nu));
@@ -42,21 +45,21 @@ class MaterialModel {
         (-inv_J * 2 * mu_0) * (p.m_F - R) * p.m_F.transpose() + (-lambda_0 * (J - 1)) * Mat3f::Identity();
     return cauchy_stress;
   }
-  static Mat3f getNeoHookeanStress(Particle &p) {
+  static __host__ __device__ Mat3f getNeoHookeanStress(Particle &p) {
     return mpm::Mat3f();
   }
 
-  static void projectSand(Particle &p, Scalar dt) {
+  static __host__ __device__ void projectSand(Particle &p, Scalar dt) {
 
   }
-  static void projectSnow(Particle &p, Scalar dt) {
+  static __host__ __device__ void projectSnow(Particle &p, Scalar dt) {
 
   }
-  static void projectWeaklyCompressibleWater(Particle &p, Scalar dt) {
+  static __host__ __device__ void projectWeaklyCompressibleWater(Particle &p, Scalar dt) {
     p.m_Jp *= 1 + dt * p.m_Cp.trace();
 
   }
-  static void projectCorotatedJelly(Particle &p, Scalar dt) {
+  static __host__ __device__  void projectCorotatedJelly(Particle &p, Scalar dt) {
 
     p.m_F = p.m_F + dt * p.m_Cp*p.m_F;
   }
@@ -65,4 +68,4 @@ class MaterialModel {
 
 }
 
-#endif //MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_H_
+#endif //MPM_SOLVER_SRC_SIMULATION_MATERIALMODEL_CUH_

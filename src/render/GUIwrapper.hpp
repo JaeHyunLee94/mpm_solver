@@ -161,7 +161,6 @@ class GUIwrapper {
                                       const char *label_fmt = "%.1f",
                                       double angle0 = 90,
                                       ImPlotPieChartFlags flags = 0) {
-    int a =1;
     auto func = [label_ids, values, &count, x, y, radius, label_fmt, angle0, flags, this] {
       if (this->m_is_plot_started) {
         ImPlot::PlotPieChart(label_ids, values, count, x, y, radius, label_fmt, angle0, flags);

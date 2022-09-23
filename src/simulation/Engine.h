@@ -4,7 +4,8 @@
 
 #ifndef MPM_SOLVER_ENGINE_H
 #define MPM_SOLVER_ENGINE_H
-
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 #include <Eigen/Dense>
 #include <fmt/core.h>
 #include "Particles.h"
@@ -57,6 +58,13 @@ class Engine {
   _currentFrame(0)
   {
 
+    cudaError_t e = cudaGetDeviceCount(&_deviceCount);
+    e == cudaSuccess ? _deviceCount : -1;
+    fmt::print("Device count: {}\n", _deviceCount);
+    d_grid_mass_ptr= nullptr;
+    d_grid_vel_ptr= nullptr;
+    d_particles_ptr = nullptr;
+
   };
   //destructor
   ~Engine() = default;
@@ -66,8 +74,11 @@ class Engine {
 //  void integrate();
   void integrate(Scalar dt);
   void integrateWithProfile(Scalar dt,Profiler& profiler);
+  void integrateWithCuda(Scalar dt);
+  void integrateWithCudaAndProfile(Scalar dt,Profiler& profiler);
   void reset(Particles& particle,EngineConfig engine_config);
   void setGravity(Vec3f gravity);
+  inline bool isCudaAvailable() const{return _deviceCount > 0;};
   void setEngineConfig(EngineConfig engine_config);
   float* getGravityFloatPtr();
   void addParticles(Particles& particles);
@@ -83,17 +94,24 @@ class Engine {
  private:
 
   // important function
-  void init();
+  void initGrid();
   void p2g(Scalar dt);
   void updateGrid(Scalar dt);
   void g2p(Scalar dt);
+
+  void transferDataToDevice();
 
   EngineConfig _engineConfig;
   Vec3f _gravity{0,0,0};
   Grid _grid;
   unsigned int bound =3;
   bool _isCreated = false;
+  int _deviceCount;
   unsigned long long _currentFrame;
+  Particle* d_particles_ptr;
+  Vec3f* d_grid_vel_ptr;
+  Scalar* d_grid_mass_ptr;
+
 
 
 };

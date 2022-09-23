@@ -7,15 +7,12 @@
 #include "../src/System/Profiler.h"
 #include <iostream>
 
+
 Renderer *renderer = nullptr;
 InputHandler *handler = nullptr;
 GUIwrapper *gui = nullptr;
 mpm::Engine *engine = nullptr;
 Profiler *profiler = nullptr;
-//const char **const  labels=nullptr;
-//clock_t *values=nullptr;
-const char* labels1[]    = {"Frogs","Hogs","Dogs","Logs"};
-long data1[]            = {1,  2,  3, 4};
 
 void initRenderer() {
   renderer = Renderer::Builder()
@@ -38,7 +35,7 @@ void initEngine(mpm::EngineConfig config) {
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.3), 0.5, pow(res, 3) / 4);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.9, pow(res, 3) / 4);
   mpm::Particles
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
@@ -92,7 +89,7 @@ void initGui() {
           mpm::Explicit,
           mpm::Dense,
           mpm::Vec3i(64, 64, 64),
-          1. / 64,
+          1.f / 64,
           1000,
       })
       .endGroup()
@@ -104,6 +101,7 @@ void initDevice() {
 
   cudaError_t e = cudaGetDeviceCount(&deviceCount);
   e == cudaSuccess ? deviceCount : -1;
+  fmt::print("Device count: {}\n", deviceCount);
 }
 
 void run() {
@@ -121,6 +119,7 @@ void initProfiler(){
 
 int main() {
 
+  initDevice();
   initProfiler();
   initRenderer();
   initHandler();
@@ -130,7 +129,7 @@ int main() {
       mpm::Explicit,
       mpm::Dense,
       mpm::Vec3i(64, 64, 64),
-      1. / 64,
+      1.f / 64,
       1000,
   });
   initGui();
