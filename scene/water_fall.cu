@@ -107,7 +107,8 @@ void initDevice() {
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
 
-    engine->integrateWithProfile(1e-3,*profiler);
+//    engine->integrateWithProfile(1e-3,*profiler);
+engine->integrateWithCuda(1e-3);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 

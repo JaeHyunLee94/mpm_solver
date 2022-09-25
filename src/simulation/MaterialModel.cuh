@@ -17,7 +17,7 @@ class MaterialModel {
   static Scalar bulkModulus;
   static Scalar gamma;
 
-  static __host__ __device__ Mat3f getStressWeaklyCompressibleWater(Particle &p) {
+  __host__ __device__ static  Mat3f getStressWeaklyCompressibleWater(Particle &p) {
     /*
      * TODO: Implement the weakly compressible model
      */
@@ -28,7 +28,7 @@ class MaterialModel {
     return pressure * Mat3f::Identity();
 
   }
-  static __host__ __device__ Mat3f getStressCorotatedJelly(Particle &p) {
+  __host__ __device__ static  Mat3f getStressCorotatedJelly(Particle &p) {
     constexpr Scalar E = 1000; //Young's modulus
     constexpr Scalar nu = 0.2;  //# Poisson's ratio
     constexpr Scalar mu_0 = E / (2 * (1 + nu));
@@ -45,17 +45,17 @@ class MaterialModel {
         (-inv_J * 2 * mu_0) * (p.m_F - R) * p.m_F.transpose() + (-lambda_0 * (J - 1)) * Mat3f::Identity();
     return cauchy_stress;
   }
-  static __host__ __device__ Mat3f getNeoHookeanStress(Particle &p) {
+  __host__ __device__ static  Mat3f getNeoHookeanStress(Particle &p) {
     return mpm::Mat3f();
   }
 
-  static __host__ __device__ void projectSand(Particle &p, Scalar dt) {
+  __host__ __device__ static  void projectSand(Particle &p, Scalar dt) {
 
   }
-  static __host__ __device__ void projectSnow(Particle &p, Scalar dt) {
+  __host__ __device__ static  void projectSnow(Particle &p, Scalar dt) {
 
   }
-  static __host__ __device__ void projectWeaklyCompressibleWater(Particle &p, Scalar dt) {
+  __host__ __device__ static  void projectWeaklyCompressibleWater(Particle &p, Scalar dt) {
     p.m_Jp *= 1 + dt * p.m_Cp.trace();
 
   }

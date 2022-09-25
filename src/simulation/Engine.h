@@ -112,8 +112,7 @@ class Engine {
   Vec3f* d_grid_vel_ptr;
   Scalar* d_grid_mass_ptr;
 
-
-
+  void transferDataFromDevice();
 };
 
 }

@@ -5,7 +5,7 @@
 #include "Engine.h"
 #include "MaterialModel.cuh"
 #include <omp.h>
-
+#include "./simulation kernel/Kernel.cu"
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
   initGrid();
@@ -17,39 +17,35 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
 
 #define SQR(x) ((x)*(x))
 
-void mpm::Engine::p2g(Scalar dt)
-{
+void mpm::Engine::p2g(Scalar dt) {
   const Scalar _4_dt_invdx2 = 4.0f * dt * _grid.invdx() * _grid.invdx();
 #pragma omp parallel for schedule(dynamic)
-  for (int p = 0; p < m_sceneParticles.size(); ++p)
-  {
-    auto& particle = m_sceneParticles[p];
+  for (int p = 0; p < m_sceneParticles.size(); ++p) {
+    auto &particle = m_sceneParticles[p];
     Vec3f Xp = particle.m_pos * _grid.invdx();
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
     ////TODO: optimization candidate: so many constructor call?
-    Vec3f w[3] = { 0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
-                   Vec3f(0.75f - SQR(fx[0] - 1.0f),
-                         0.75f - SQR(fx[1] - 1.0f),
-                         0.75f - SQR(fx[2] - 1.0f)),
-                   0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f)) };
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1.0f),
+                        0.75f - SQR(fx[1] - 1.0f),
+                        0.75f - SQR(fx[2] - 1.0f)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
 
 
     ////TODO: optimization candidate: multiplication of matrix can be expensive.
     Mat3f cauchy_stress = particle.getStress(particle);//TODO: Std::bind
 
 
-    Mat3f stress = cauchy_stress * (particle.m_Jp * particle.m_V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
+    Mat3f stress = cauchy_stress
+        * (particle.m_Jp * particle.m_V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
     Mat3f affine = stress + particle.m_mass * particle.m_Cp;
     //Scatter the quantity
-    for (int i = 0; i < 3; i++)
-    {
-      for (int j = 0; j < 3; ++j)
-      {
-        for (int k = 0; k < 3; ++k)
-        {
-          Vec3i offset{ i, j, k };
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
           Scalar weight = w[i][0] * w[j][1] * w[k][2];
           Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
           //i * _y_res * _z_res + j * _z_res + k
@@ -79,20 +75,17 @@ void mpm::Engine::p2g(Scalar dt)
 
 }
 
-void mpm::Engine::updateGrid(Scalar dt)
-{
+void mpm::Engine::updateGrid(Scalar dt) {
   const unsigned int x_dim = _grid.getGridDimX();
   const unsigned int y_dim = _grid.getGridDimY();
   const unsigned int z_dim = _grid.getGridDimZ();
 
 #pragma omp parallel for
-  for (int i = 0; i < _grid.getGridSize(); ++i)
-  {
+  for (int i = 0; i < _grid.getGridSize(); ++i) {
     ////TODO: optimization candidate: should we iterate all? we can use continue;
     ////TODO: optimization candidate: use signbit();
 
-    if (_grid.m_mass[i] > 0)
-    {
+    if (_grid.m_mass[i] > 0) {
       _grid.m_vel[i] /= _grid.m_mass[i];
       _grid.m_vel[i] += dt * _gravity;
 
@@ -101,49 +94,40 @@ void mpm::Engine::updateGrid(Scalar dt)
       unsigned int zi = i - xi * y_dim * z_dim - yi * z_dim;
       if (xi < bound && _grid.m_vel[i][0] < 0) {
         _grid.m_vel[i][0] = 0;
-      }
-      else if (xi > x_dim - bound && _grid.m_vel[i][0] > 0) {
+      } else if (xi > x_dim - bound && _grid.m_vel[i][0] > 0) {
         _grid.m_vel[i][0] = 0;
       }
       if (yi < bound && _grid.m_vel[i][1] < 0) {
         _grid.m_vel[i][1] = 0;
-      }
-      else if (yi > y_dim - bound && _grid.m_vel[i][1] > 0) {
+      } else if (yi > y_dim - bound && _grid.m_vel[i][1] > 0) {
         _grid.m_vel[i][1] = 0;
       }
       if (zi < bound && _grid.m_vel[i][2] < 0) {
         _grid.m_vel[i][2] = 0;
-      }
-      else if (zi > z_dim - bound && _grid.m_vel[i][2] > 0) {
+      } else if (zi > z_dim - bound && _grid.m_vel[i][2] > 0) {
         _grid.m_vel[i][2] = 0;
       }
 
-
     }
-
-
-
 
   }
 
 }
 
-void mpm::Engine::g2p(Scalar dt)
-{
+void mpm::Engine::g2p(Scalar dt) {
   const Scalar _4_invdx2 = 4.0f * _grid.invdx() * _grid.invdx();
 #pragma omp parallel for
-  for (int p = 0; p < m_sceneParticles.size(); ++p)
-  {
-    auto& particle = m_sceneParticles[p];
+  for (int p = 0; p < m_sceneParticles.size(); ++p) {
+    auto &particle = m_sceneParticles[p];
     Vec3f Xp = particle.m_pos * _grid.invdx();
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
-    Vec3f w[3] = { 0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
-                   Vec3f(0.75f - SQR(fx[0] - 1),
-                         0.75f - SQR(fx[1] - 1),
-                         0.75f - SQR(fx[2] - 1)),
-                   0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f)) };
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1),
+                        0.75f - SQR(fx[1] - 1),
+                        0.75f - SQR(fx[2] - 1)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
 
     Vec3f new_v = Vec3f::Zero();
     Mat3f new_C = Mat3f::Zero();
@@ -151,18 +135,16 @@ void mpm::Engine::g2p(Scalar dt)
 
 
     //Scatter the quantity
-    for (int i = 0; i < 3; ++i)
-    {
-      for (int j = 0; j < 3; ++j)
-      {
-        for (int k = 0; k < 3; ++k)
-        {
-          Vec3i offset{ i, j, k };
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
           Scalar weight = w[i][0] * w[j][1] * w[k][2];
           Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
           //i * _y_res * _z_res + j * _z_res + k
           Vec3i grid_index = base + offset;
-          unsigned int idx = (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ() + grid_index[2];
+          unsigned int
+              idx = (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ() + grid_index[2];
           new_v += weight * _grid.m_vel[idx];
           new_C += (weight * _4_invdx2) * _grid.m_vel[idx] * dpos.transpose();
 
@@ -177,14 +159,11 @@ void mpm::Engine::g2p(Scalar dt)
 
     particle.project(particle, dt);
 
-
   }
-
-
 
 }
 
-void mpm::Engine::addParticles(Particles& particles) {
+void mpm::Engine::addParticles(Particles &particles) {
   //TODO: const
   if (!_isCreated) {
     fmt::print("Engine not created yet\n");
@@ -216,10 +195,10 @@ void mpm::Engine::setGravity(Vec3f gravity) {
 void mpm::Engine::initGrid() {
   _grid.resetGrid();
 }
-float* mpm::Engine::getGravityFloatPtr() {
+float *mpm::Engine::getGravityFloatPtr() {
   return _gravity.data();
 }
-void mpm::Engine::reset(Particles& particle, EngineConfig engine_config) {
+void mpm::Engine::reset(Particles &particle, EngineConfig engine_config) {
 
   _engineConfig = engine_config;
   deleteAllParticle();
@@ -234,7 +213,7 @@ void mpm::Engine::deleteAllParticle() {
 void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
   _engineConfig = engine_config;
 }
-void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler& profiler) {
+void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
   profiler.start("init");
   initGrid();
@@ -255,12 +234,44 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   transferDataToDevice();
   //launch kernel
+  int gs =10;
+  int bs =10;
+  mpm::KernelLaunch("p2g",  gs, bs, p2gCuda,d_particles_ptr,d_grid_vel_ptr,d_grid_mass_ptr,dt,_grid.dx(),_grid.getGridDimX(),_grid.getGridDimY(),_grid.getGridDimZ());
+
+  transferDataFromDevice();
 
 }
 void mpm::Engine::integrateWithCudaAndProfile(mpm::Scalar dt, Profiler &profiler) {
 
 }
 void mpm::Engine::transferDataToDevice() {
+  static bool is_first = true;
+  if (is_first){
+    cudaMalloc((void **) &d_particles_ptr, sizeof(Particle) * m_sceneParticles.size());
+    cudaMalloc((void **) &d_grid_mass_ptr,
+               sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ());
+    cudaMalloc((void **) &d_grid_vel_ptr,
+               sizeof(Vec3f) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ());
+    is_first = false;
+  }
+
+
+  cudaMemcpy(d_particles_ptr, m_sceneParticles.data(), sizeof(Particle) * m_sceneParticles.size(),
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(d_grid_mass_ptr, _grid.m_mass.data(), sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ(),
+                cudaMemcpyHostToDevice);
+  cudaMemcpy(d_grid_vel_ptr, _grid.m_vel.data(), sizeof(Vec3f) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ(),
+                cudaMemcpyHostToDevice);
+
+
+}
+void mpm::Engine::transferDataFromDevice() {
+  cudaMemcpy(m_sceneParticles.data(), d_particles_ptr, sizeof(Particle) * m_sceneParticles.size(),
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(_grid.m_mass.data(), d_grid_mass_ptr, sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ(),
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(_grid.m_vel.data(), d_grid_vel_ptr, sizeof(Vec3f) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ(),
+             cudaMemcpyDeviceToHost);
 
 }
 
