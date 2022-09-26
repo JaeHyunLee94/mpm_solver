@@ -8,7 +8,7 @@ add_subdirectory(partio)
 #spgrid
 #add_subdirectory(SPGrid)
 
-add_subdirectory(libccd)
+#add_subdirectory(libccd)
 
 #glew
 #add_subdirectory(glew)

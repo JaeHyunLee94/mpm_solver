@@ -32,8 +32,8 @@ void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType mate
         break;
       }
       case mpm::MaterialType::CorotatedJelly: {
-        particle.getStress= mpm::MaterialModel::getStressCorotatedJelly;
-        particle.project= mpm::MaterialModel::projectCorotatedJelly;
+        particle.getStress=  mpm::MaterialModel::getStressCorotatedJelly;
+        particle.project=  mpm::MaterialModel::projectCorotatedJelly;
         break;
       }
     }

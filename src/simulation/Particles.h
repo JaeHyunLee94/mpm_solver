@@ -36,8 +36,10 @@ struct Particle{
   Mat3f m_Cp;//TODO: APIC
   Scalar m_Jp;
   Scalar m_V0;
-  nvstd::function<  Mat3f(Particle&)> getStress; //return cauchy stress
-  nvstd::function<void(Particle&,Scalar dt)> project; //project deformation gradient
+  nvstd::function< Mat3f(Particle*)> getStress; //return cauchy stress
+  nvstd::function< void(Particle*,Scalar dt)> project; //project deformation gradient
+//  std::function<  Mat3f(Particle&)> getStress; //return cauchy stress
+//  std::function<void(Particle&,Scalar dt)> project; //project deformation gradient
   MaterialType m_material_type;
 
 };

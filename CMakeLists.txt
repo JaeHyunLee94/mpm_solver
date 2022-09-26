@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.8)
 
 project(
         MPM_SOLVER
@@ -8,25 +8,33 @@ project(
 )
 
 enable_testing()
+#include(CheckLanguage)
+#check_language(CUDA)
+#if (CMAKE_CUDA_COMPILER)
+#    message(STATUS "CUDA is OK")
+#else()
+#    message(STATUS "No CUDA")
+#endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 11)
 message("Processing top level CMakeLists.txt")
-
-if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 75) ## home
-    #set(CMAKE_CUDA_ARCHITECTURES 86) ## lab
-endif()
-
+set(CMAKE_CUDA_ARCHITECTURES 86)
+#if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+#    set(CMAKE_CUDA_ARCHITECTURES 75) ## home
+#    set(CMAKE_CUDA_ARCHITECTURES 86) ## lab
+#endif()
+#list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;-std=c++11;-O2;-DVERBOSE")
+#set(CMAKE_CUDA_FLAGS	"${CMAKE_CUDA_FLAGS}	-arch=sm_86")
 find_package(OpenGL REQUIRED)
 find_package(OpenMP)
+find_package(CUDAToolkit REQUIRED)
 #find_package(Boost COMPONENTS filesystem REQUIRED)
 #find_package(Boost COMPONENTS)
 #file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
 #list(APPEND CMAKE_MODULE_PATH "./external/openvdb/cmake/OpenVDB")
 #find_package(OpenVDB REQUIRED)
 
-message("${ALL_SRC}")
 
 #process external library
 add_subdirectory(external)

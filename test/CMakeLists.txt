@@ -2,6 +2,7 @@
 
 include(CTest)
 #cuda vec add
+
 add_executable(test_cuda "test_cuda.cu")
 set_target_properties(
         test_cuda
@@ -37,10 +38,10 @@ target_link_libraries(test_partio partio)
 add_test(test_partio test_partio)
 
 #libccd
-include_directories(${PROJECT_SOURCE_DIR}/external/libccd/src)
-add_executable(test_libccd "test_libccd.cpp")
-target_link_libraries(test_libccd ccd_static)
-add_test(test_libccd test_libccd)
+#include_directories(${PROJECT_SOURCE_DIR}/external/libccd/src)
+#add_executable(test_libccd "test_libccd.cpp")
+#target_link_libraries(test_libccd ccd_static)
+#add_test(test_libccd test_libccd)
 
 #glfw
 include_directories(${PROJECT_SOURCE_DIR}/external/glfw/include)
