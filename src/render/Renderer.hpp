@@ -16,8 +16,8 @@
 #include <GLFW/glfw3.h>
 //#include "../utils/UtilHeader.h"
 #include "InputHandler.hpp"
-#include "../simulation/Engine.h"
-#include "../utils/UtilHeader.h"
+#include "../engine/Engine.h"
+#include "RenderUtils.h"
 
 class PhysicsEntity;
 

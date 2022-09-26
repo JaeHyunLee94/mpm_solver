@@ -6,7 +6,7 @@
 #define MPM_SOLVER_SRC_RENDER_GEOMETRY_H_
 
 #include <glm/glm.hpp>
-#include "../utils/UtilHeader.h"
+#include "RenderUtils.h"
 
 class Mesh {
 public:

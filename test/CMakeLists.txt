@@ -46,7 +46,7 @@ add_test(test_partio test_partio)
 #glfw
 include_directories(${PROJECT_SOURCE_DIR}/external/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glew/include)
-file(GLOB glew_src  "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.h" "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.c")
+file(GLOB glew_src  "${PROJECT_SOURCE_DIR}/external/glew/include/GL/glew.h" "../external/glew/src/glew.c")
 add_executable(test_glfw "test_glfw.cpp"  ${glew_src})
 target_link_libraries(test_glfw glfw ${OPENGL_LIBRARIES})
 add_test(test_glfw test_glfw)

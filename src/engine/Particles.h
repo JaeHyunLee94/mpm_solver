@@ -10,9 +10,14 @@
 #include <fmt/core.h>
 #include "Types.h"
 #include "Entity.h"
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include "nvfunctional"
+
+#ifdef __CUDACC__
+//#include "cuda_runtime.h"
+//#include "device_launch_parameters.h"
+//#include "nvfunctional"
+#endif
+
+
 namespace mpm{
 
 
@@ -36,8 +41,8 @@ struct Particle{
   Mat3f m_Cp;//TODO: APIC
   Scalar m_Jp;
   Scalar m_V0;
-  nvstd::function< Mat3f(Particle*)> getStress; //return cauchy stress
-  nvstd::function< void(Particle*,Scalar dt)> project; //project deformation gradient
+  std::function< Mat3f(Particle*)> getStress; //return cauchy stress
+  std::function< void(Particle*,Scalar dt)> project; //project deformation gradient
 //  std::function<  Mat3f(Particle&)> getStress; //return cauchy stress
 //  std::function<void(Particle&,Scalar dt)> project; //project deformation gradient
   MaterialType m_material_type;

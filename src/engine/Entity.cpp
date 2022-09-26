@@ -3,6 +3,7 @@
 //
 
 #include "Entity.h"
+
 void mpm::Entity::loadFromFile(const std::string &filename, unsigned int particle_num, bool usePoisson) {
 
   if (usePoisson) {

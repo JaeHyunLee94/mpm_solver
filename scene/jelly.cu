@@ -1,9 +1,8 @@
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
 
-#include "../src/simulation/Engine.h"
-#include "../src/render/Renderer.hpp"
+
+#include <Renderer.hpp>
+#include <Engine.h>
 
 
 #include <iostream>
@@ -50,12 +49,6 @@ void initGui(){
       .addWidgetText("Application average %.3f ms/frame (%.1f FPS)",
                     gui->m_average_time, gui->m_frame_rate)
 
-//      .startPlot("My Plot")
-//      .addPlotBars("My Bar", bar_data, 11)
-//      .endPlot()
-//        .startPlot("My Pie")
-//        .addPieChartPlotPieChart(labels1, data1, 4, 0.5, 0.5, 0.4)
-//        .endPlot()
       .endGroup()
       .startGroup("Render Setting")
       .addWidgetText("Color setting")
