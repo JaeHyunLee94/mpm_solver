@@ -34,7 +34,7 @@ void initEngine(mpm::EngineConfig config) {
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / 8);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
   mpm::Particles
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
@@ -98,9 +98,8 @@ void initGui() {
 
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
-
-    engine->integrateWithProfile(8e-4,*profiler);
-//engine->integrateWithCuda(1e-3);
+    // engine->integrateWithProfile(8e-4,*profiler);
+engine->integrateWithCuda(8e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
@@ -126,6 +125,7 @@ int main() {
   });
   initGui();
 
+  engine->makeAosToSOA();
   run();
 
 

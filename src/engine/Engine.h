@@ -109,7 +109,8 @@ class Engine {
   void deleteAllParticle();
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const { return _currentFrame; }
-
+  Scalar * getParticlePosPtr(){return h_p_pos_ptr;}
+  void makeAosToSOA();
   EngineConfig getEngineConfig();
 
   std::vector<Particle> m_sceneParticles;
@@ -125,7 +126,11 @@ class Engine {
   //CUDA relevant function
   void transferDataToDevice();
   void transferDataFromDevice();
-  void makeAosToSOA();
+
+//  void p2gCudaWrapper(int gs, int bs);
+//  void g2pCudaWrapper(int gs, int bs);
+//  void updateGridCudaWrapper(int gs, int bs);
+
 
   EngineConfig _engineConfig;
   Vec3f _gravity{0, 0, 0};

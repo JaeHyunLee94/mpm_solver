@@ -59,20 +59,34 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
                         (void *) (m_sphere_mesh.getVertexCount() * sizeof(glm::vec3)));
   glEnableVertexAttribArray(2);
 
-  glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
-  glBufferData(GL_ARRAY_BUFFER,
-               engine.getParticleCount() * sizeof(mpm::Particle),
-               engine.m_sceneParticles.data(),
-               GL_DYNAMIC_DRAW);
+  if(engine.isCudaAvailable()){
+    glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
+    glBufferData(GL_ARRAY_BUFFER,
+                 3*engine.getParticleCount() * sizeof(float),
+                 engine.getParticlePosPtr(),
+                 GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
 
-  glEnableVertexAttribArray(2);
-  glVertexAttribDivisor(2, 1);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (GLvoid *) offsetof(mpm::Particle, m_pos));
 
+  }else{
+    glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
+    glBufferData(GL_ARRAY_BUFFER,
+                 engine.getParticleCount() * sizeof(mpm::Particle),
+                 engine.m_sceneParticles.data(),
+                 GL_DYNAMIC_DRAW);
 
-  //Instance drawing
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(mpm::Particle), (GLvoid *) offsetof(mpm::Particle, m_pos));
+
+    //Instance drawing
+
+  }
   glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
                           nullptr, engine.getParticleCount());
+
 
   gui.render();
 

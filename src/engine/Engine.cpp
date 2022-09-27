@@ -9,6 +9,9 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "nvfunctional"
+
+
+
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
   initGrid();
@@ -233,58 +236,81 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
   profiler.makeArray();
 
 }
-void mpm::Engine::integrateWithCuda(Scalar dt) {
 
-
-  transferDataToDevice();
-
-  transferDataFromDevice();
-
-}
 
 void mpm::Engine::transferDataToDevice() {
   static bool is_first = true;
-  if (is_first){
+  if (is_first) {
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_mass_ptr, sizeof(Scalar) * m_sceneParticles.size()));
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_pos_ptr, sizeof(Scalar) * m_sceneParticles.size()*3));
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_vel_ptr, sizeof(Scalar) * m_sceneParticles.size()*3));
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_F_ptr, sizeof(Scalar) * m_sceneParticles.size()*9));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_pos_ptr, sizeof(Scalar) * m_sceneParticles.size() * 3));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_vel_ptr, sizeof(Scalar) * m_sceneParticles.size() * 3));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_F_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size()));
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size()*9));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size()));
-
-
-
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_mass_ptr, sizeof(Scalar) *_grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_vel_ptr, 3*sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
 
     is_first = false;
   }
 
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_mass_ptr, h_p_mass_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_pos_ptr, h_p_pos_ptr, 3*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_vel_ptr, h_p_vel_ptr, 3*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_F_ptr, h_p_F_ptr, 9*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_J_ptr, h_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_C_ptr, h_p_C_ptr, 9*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpy(d_p_V0_ptr, h_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_mass_ptr,
+                            h_p_mass_ptr,
+                            sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_pos_ptr,
+                            h_p_pos_ptr,
+                            3 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_vel_ptr,
+                            h_p_vel_ptr,
+                            3 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_F_ptr,
+                            h_p_F_ptr,
+                            9 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_J_ptr, h_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_C_ptr,
+                            h_p_C_ptr,
+                            9 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr, h_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyHostToDevice));
 
+  CUDA_ERR_CHECK(cudaMemsetAsync(d_g_mass_ptr,
+                 0,
+                            sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+  CUDA_ERR_CHECK(cudaMemsetAsync(d_g_vel_ptr,
+                            0,
+                            3 * sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
 
-  CUDA_ERR_CHECK(cudaMemset(d_g_mass_ptr,0, sizeof(Scalar)*_grid.getGridDimX()*_grid.getGridDimY()*_grid.getGridDimZ()));
-  CUDA_ERR_CHECK(cudaMemset(d_g_vel_ptr,0, 3*sizeof(Scalar)*_grid.getGridDimX()*_grid.getGridDimY()*_grid.getGridDimZ()));
-
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 void mpm::Engine::transferDataFromDevice() {
 
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_mass_ptr, d_p_mass_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_pos_ptr, d_p_pos_ptr, 3*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_vel_ptr, d_p_vel_ptr, 3*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_F_ptr, d_p_F_ptr, 9*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_J_ptr, d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_C_ptr, d_p_C_ptr, 9*sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-    CUDA_ERR_CHECK(cudaMemcpy(h_p_V0_ptr, d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(),cudaMemcpyDeviceToHost));
-
-
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_mass_ptr,
+                            d_p_mass_ptr,
+                            sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_pos_ptr,
+                            d_p_pos_ptr,
+                            3 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_vel_ptr,
+                            d_p_vel_ptr,
+                            3 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_F_ptr,
+                            d_p_F_ptr,
+                            9 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_J_ptr, d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_C_ptr,
+                            d_p_C_ptr,
+                            9 * sizeof(Scalar) * m_sceneParticles.size(),
+                            cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr, d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyDeviceToHost));
 
 }
 void mpm::Engine::makeAosToSOA() {

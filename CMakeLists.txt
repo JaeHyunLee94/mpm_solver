@@ -29,6 +29,7 @@ set(CMAKE_CUDA_ARCHITECTURES 86)
 find_package(OpenGL REQUIRED)
 find_package(OpenMP)
 find_package(CUDAToolkit REQUIRED)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-use_fast_math)
 #find_package(Boost COMPONENTS filesystem REQUIRED)
 #find_package(Boost COMPONENTS)
 #file(GLOB_RECURSE ALL_SRC "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cuh" "src/*.cu")
@@ -47,4 +48,4 @@ add_subdirectory(src)
 add_subdirectory(scene)
 
 #process test
-add_subdirectory(test)
+#add_subdirectory(test)
