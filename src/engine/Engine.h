@@ -47,6 +47,7 @@ struct EngineConfig {
   Vec3i m_gridResolution;
   Scalar m_gridCellSize;
   unsigned int m_targetFrame;
+  Device m_device;
 
 };
 
@@ -86,10 +87,16 @@ class Engine {
     d_g_mass_ptr = nullptr;
     d_g_vel_ptr = nullptr;
 
+    if(_engineConfig.m_device==Device::GPU){
 #ifdef __CUDACC__
-    cudaError_t e = cudaGetDeviceCount(&_deviceCount);
-    e == cudaSuccess ? _deviceCount : -1;
+        cudaError_t e = cudaGetDeviceCount(&_deviceCount);
+        e == cudaSuccess ? _deviceCount : -1;
+#else
+        fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
+    _engineConfig.m_device = CPU;
 #endif
+    }
+
 
   };
 
@@ -98,7 +105,7 @@ class Engine {
 
   void integrate(Scalar dt);
   void integrateWithProfile(Scalar dt, Profiler &profiler);
-  void integrateWithCuda(Scalar dt);
+
 
   void reset(Particles &particle, EngineConfig engine_config);
   void setGravity(Vec3f gravity);
@@ -110,7 +117,7 @@ class Engine {
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const { return _currentFrame; }
   Scalar * getParticlePosPtr(){return h_p_pos_ptr;}
-  void makeAosToSOA();
+
   EngineConfig getEngineConfig();
 
   std::vector<Particle> m_sceneParticles;
@@ -124,6 +131,8 @@ class Engine {
   void g2p(Scalar dt);
 
   //CUDA relevant function
+  void integrateWithCuda(Scalar dt);
+  void makeAosToSOA();
   void transferDataToDevice();
   void transferDataFromDevice();
 

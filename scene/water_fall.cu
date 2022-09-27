@@ -90,6 +90,7 @@ void initGui() {
           mpm::Vec3i(64, 64, 64),
           1.f / 64,
           1000,
+          mpm::GPU
       })
       .endGroup()
       .build();
@@ -99,7 +100,7 @@ void initGui() {
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
     // engine->integrateWithProfile(8e-4,*profiler);
-engine->integrateWithCuda(8e-4);
+engine->integrate(8e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
@@ -122,10 +123,10 @@ int main() {
       mpm::Vec3i(64, 64, 64),
       1.f / 64,
       1000,
+      mpm::GPU
   });
   initGui();
 
-  engine->makeAosToSOA();
   run();
 
 

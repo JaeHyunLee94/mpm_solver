@@ -21,7 +21,7 @@ class MaterialModel {
     /*
      * TODO: Implement the weakly compressible model
      */
-////      printf("D\n");
+
     Scalar m_Jp_3 = (*p).m_Jp * (*p).m_Jp * (*p).m_Jp;
     Scalar pressure = (10.0f * (1.0f / (m_Jp_3 * m_Jp_3 * (*p).m_Jp) - 1));
 

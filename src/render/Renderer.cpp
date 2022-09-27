@@ -70,6 +70,8 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
 
 
+
+
   }else{
     glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
     glBufferData(GL_ARRAY_BUFFER,

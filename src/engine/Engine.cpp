@@ -3,7 +3,7 @@
 //
 
 #include "Engine.h"
-#include "MaterialModel.cuh"
+#include "MaterialModel.h"
 #include <omp.h>
 #include "CudaUtils.cuh"
 #include "cuda_runtime.h"
@@ -14,10 +14,15 @@
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
-  initGrid();
-  p2g(dt);
-  updateGrid(dt);
-  g2p(dt);
+    if(_engineConfig.m_device==Device::CPU) {
+        initGrid();
+        p2g(dt);
+        updateGrid(dt);
+        g2p(dt);
+    }else{
+        integrateWithCuda(dt);
+    }
+
   _currentFrame++;
 }
 
@@ -179,9 +184,11 @@ void mpm::Engine::addParticles(Particles &particles) {
   }
 
   //TODO: copy
+
   for (int i = 0; i < particles.getParticleNum(); i++) {
     m_sceneParticles.push_back(particles.mParticleList[i]);
   }
+
 
   fmt::print("particle[tag:{}] added\n", particles.getTag());
 
@@ -221,19 +228,24 @@ void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
 }
 void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
-  profiler.start("init");
-  initGrid();
-  profiler.endAndReport("init");
-  profiler.start("p2g");
-  p2g(dt);
-  profiler.endAndReport("p2g");
-  profiler.start("updateGrid");
-  updateGrid(dt);
-  profiler.endAndReport("updateGrid");
-  profiler.start("g2p");
-  g2p(dt);
-  profiler.endAndReport("g2p");
-  profiler.makeArray();
+    if(_engineConfig.m_device==Device::CPU){
+        profiler.start("init");
+        initGrid();
+        profiler.endAndReport("init");
+        profiler.start("p2g");
+        p2g(dt);
+        profiler.endAndReport("p2g");
+        profiler.start("updateGrid");
+        updateGrid(dt);
+        profiler.endAndReport("updateGrid");
+        profiler.start("g2p");
+        g2p(dt);
+        profiler.endAndReport("g2p");
+        profiler.makeArray();
+    }else{
+        integrateWithCuda(dt);
+    }
+
 
 }
 
@@ -241,6 +253,7 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 void mpm::Engine::transferDataToDevice() {
   static bool is_first = true;
   if (is_first) {
+      makeAosToSOA();
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_mass_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_pos_ptr, sizeof(Scalar) * m_sceneParticles.size() * 3));
@@ -254,6 +267,8 @@ void mpm::Engine::transferDataToDevice() {
 
     is_first = false;
   }
+
+
 
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_mass_ptr,
                             h_p_mass_ptr,
@@ -293,6 +308,7 @@ void mpm::Engine::transferDataFromDevice() {
                             d_p_mass_ptr,
                             sizeof(Scalar) * m_sceneParticles.size(),
                             cudaMemcpyDeviceToHost));
+
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_pos_ptr,
                             d_p_pos_ptr,
                             3 * sizeof(Scalar) * m_sceneParticles.size(),
@@ -311,7 +327,7 @@ void mpm::Engine::transferDataFromDevice() {
                             9 * sizeof(Scalar) * m_sceneParticles.size(),
                             cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr, d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyDeviceToHost));
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 void mpm::Engine::makeAosToSOA() {
 

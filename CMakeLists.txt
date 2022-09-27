@@ -19,11 +19,11 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 11)
 message("Processing top level CMakeLists.txt")
-set(CMAKE_CUDA_ARCHITECTURES 86)
-#if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-#    set(CMAKE_CUDA_ARCHITECTURES 75) ## home
-#    set(CMAKE_CUDA_ARCHITECTURES 86) ## lab
-#endif()
+
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES 75) ## home
+    #set(CMAKE_CUDA_ARCHITECTURES 86) ## lab
+endif()
 #list(APPEND CUDA_NVCC_FLAGS "-arch=sm_20;-std=c++11;-O2;-DVERBOSE")
 #set(CMAKE_CUDA_FLAGS	"${CMAKE_CUDA_FLAGS}	-arch=sm_86")
 find_package(OpenGL REQUIRED)

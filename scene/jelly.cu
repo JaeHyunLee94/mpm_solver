@@ -33,7 +33,7 @@ void initEngine(mpm::EngineConfig config){
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.3, 2*pow(res,3)/4);//pow(res,3)/4
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.3, 2*pow(res,3)/(4*32)*32);//pow(res,3)/4
   //fmt::print("entity size: {}", pow(res,3)/4);
   mpm::Particles particles(entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx*0.5,3),1,mpm::Vec3f (1,2,0)); //TODO: rho, initvol
 
@@ -75,8 +75,8 @@ void initDevice(){
 }
 void run(){
   while ( !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
-
-    engine->integrate(5e-4);
+        engine->integrate(5e-4);
+//    engine->integrate(5e-4);
     renderer->renderWithGUI((*engine), (*gui));
     handler->handleInput();
 
@@ -95,6 +95,7 @@ int main() {
       mpm::Vec3i(64, 64, 64),
       1./64,
       1000,
+      mpm::Device::GPU
   });
   initGui();
 

@@ -4,7 +4,7 @@
 
 #include "Particles.h"
 
-#include "MaterialModel.cuh"
+#include "MaterialModel.h"
 //void mpm::Particles::addParticle(Vec3f pos, MaterialType material_type) {
 //  this->_particleList.emplace_back(Particle{pos, material_type});
 //
