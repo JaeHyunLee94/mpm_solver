@@ -121,7 +121,7 @@ int main() {
       mpm::Explicit,
       mpm::Dense,
       mpm::Vec3i(64, 64, 64),
-      1.f / 64,
+      1.2f / 64,
       1000,
       mpm::GPU
   });
