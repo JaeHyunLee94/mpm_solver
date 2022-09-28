@@ -174,17 +174,29 @@ __global__ void updateGridCuda(Scalar *__restrict__ d_g_mass_ptr,
     unsigned int zi = grid_idx - xi * grid_y_dim * grid_z_dim - yi * grid_z_dim;
     if (xi < bound && g_vel.x < 0) {
       d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//        d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (xi > grid_x_dim - bound && g_vel.x > 0) {
       d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
     if (yi < bound && g_vel.y < 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
       d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (yi > grid_y_dim - bound && g_vel.y > 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
       d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
     if (zi < bound && g_vel.z < 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
       d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (zi > grid_z_dim - bound && g_vel.z > 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
       d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
   }
