@@ -3,12 +3,13 @@
 //
 
 #include "Engine.h"
-#include "MaterialModel.h"
 #include <omp.h>
-#include "CudaUtils.cuh"
+#include "cuda/CudaUtils.cuh"
+#include "cuda/CudaTypes.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "nvfunctional"
+
 
 
 
@@ -253,7 +254,8 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 void mpm::Engine::transferDataToDevice() {
   static bool is_first = true;
   if (is_first) {
-      makeAosToSOA();
+    makeAosToSOA();
+    fmt::print("Cuda Allocating...\n");
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_mass_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_pos_ptr, sizeof(Scalar) * m_sceneParticles.size() * 3));
@@ -262,8 +264,22 @@ void mpm::Engine::transferDataToDevice() {
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size()));
+
+
+
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_getStress_ptr, sizeof(StressFunc) * m_sceneParticles.size()));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_project_ptr, sizeof(ProjectFunc) * m_sceneParticles.size()));
+
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_mass_ptr, sizeof(Scalar) *_grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_vel_ptr, 3*sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+
+
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_material_type_ptr, sizeof(mpm::MaterialType) * m_sceneParticles.size()));
+    CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_material_type_ptr,
+                                   h_p_material_type_ptr,
+                                   sizeof(mpm::MaterialType) * m_sceneParticles.size(),
+                                   cudaMemcpyHostToDevice));
+    configureDeviceParticleType();
 
     is_first = false;
   }
@@ -292,6 +308,8 @@ void mpm::Engine::transferDataToDevice() {
                             9 * sizeof(Scalar) * m_sceneParticles.size(),
                             cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr, h_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyHostToDevice));
+
+
 
   CUDA_ERR_CHECK(cudaMemsetAsync(d_g_mass_ptr,
                  0,
@@ -331,6 +349,7 @@ void mpm::Engine::transferDataFromDevice() {
 }
 void mpm::Engine::makeAosToSOA() {
 
+  fmt::print("making Aos To Soa\n");
   h_p_mass_ptr = new Scalar[m_sceneParticles.size()];
   h_p_vel_ptr = new Scalar[m_sceneParticles.size() * 3];
   h_p_pos_ptr = new Scalar[m_sceneParticles.size() * 3];
@@ -338,7 +357,7 @@ void mpm::Engine::makeAosToSOA() {
   h_p_J_ptr = new Scalar[m_sceneParticles.size()];
   h_p_C_ptr = new Scalar[m_sceneParticles.size() * 9];
   h_p_V0_ptr = new Scalar[m_sceneParticles.size()];
-
+  h_p_material_type_ptr = new mpm::MaterialType[m_sceneParticles.size()];
 #pragma omp parallel for
   for (int i = 0; i < m_sceneParticles.size(); i++) {
     h_p_mass_ptr[i] = m_sceneParticles[i].m_mass;
@@ -369,9 +388,12 @@ void mpm::Engine::makeAosToSOA() {
     h_p_C_ptr[i * 9 + 7] = m_sceneParticles[i].m_Cp(2, 1);
     h_p_C_ptr[i * 9 + 8] = m_sceneParticles[i].m_Cp(2, 2);
 
+    h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
+
   }
 
 }
+
 
 
 

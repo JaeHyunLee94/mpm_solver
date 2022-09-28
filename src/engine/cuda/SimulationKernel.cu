@@ -11,7 +11,9 @@
 #include "device_launch_parameters.h"
 #include <string>
 #include "../Types.h"
-#include "../CudaUtils.cuh"
+#include "CudaUtils.cuh"
+#include "CudaTypes.h"
+#include "MaterialModels.cuh"
 
 namespace mpm {
 
@@ -22,38 +24,59 @@ void KernelLaunch(std::string &&tag, int gs, int bs, void(*f)(Arguments...), Arg
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 
-struct float9{
-  Scalar m[9];
-};
+__global__ void setParticleWiseFunction(mpm::MaterialType *d_material_type_ptr,
+                                        StressFunc *d_stress_func_ptr,
+                                        ProjectFunc *d_project_func_ptr,
+                                        const unsigned int particle_num) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
 
+//  d_material_type_ptr[idx] = mpm::MaterialType::WeaklyCompressibleWater;
+
+  if (d_material_type_ptr[idx] == mpm::MaterialType::WeaklyCompressibleWater) {
+    d_stress_func_ptr[idx] = mpm::getStressWeaklyCompressibleWaterOnDevice;
+    d_project_func_ptr[idx] = mpm::projectWeaklyCompressibleWaterOnDevice;
+  } else if (d_material_type_ptr[idx] == mpm::MaterialType::CorotatedJelly) {
+    d_stress_func_ptr[idx] = mpm::getStressCorotatedJellyOnDevice;
+    d_project_func_ptr[idx] = mpm::projectCorotatedJellyOnDevice;
+  }
+}
 #define SQR(x) ((x)*(x))
 
 __global__ void p2gCuda(
-    const Scalar * __restrict__ d_p_mass_ptr,
-    const Scalar * __restrict__ d_p_vel_ptr,
-    const Scalar * __restrict__ d_p_pos_ptr,
-    const Scalar * __restrict__ d_p_F_ptr,
-    const Scalar * __restrict__ d_p_J_ptr,
-    const Scalar * __restrict__ d_p_C_ptr,
-    const Scalar * __restrict__ d_p_V0_ptr,
+    const Scalar *__restrict__ d_p_mass_ptr,
+    const Scalar *__restrict__ d_p_vel_ptr,
+    const Scalar *__restrict__ d_p_pos_ptr,
+    const Scalar *__restrict__ d_p_F_ptr,
+    const Scalar *__restrict__ d_p_J_ptr,
+    const Scalar *__restrict__ d_p_C_ptr,
+    const Scalar *__restrict__ d_p_V0_ptr,
+    StressFunc *__restrict__ d_p_stress_func_ptr,
     Scalar *__restrict__ d_g_mass_ptr,
     Scalar *__restrict__ d_g_vel_ptr,
-   const Scalar dt,
-   const Scalar dx,
-   const unsigned int particle_num,
-   const unsigned int grid_x,
-   const unsigned int grid_y,
-   const unsigned int grid_z
+    const Scalar dt,
+    const Scalar dx,
+    const unsigned int particle_num,
+    const unsigned int grid_x,
+    const unsigned int grid_y,
+    const unsigned int grid_z
 ) {
 
   unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx >= (particle_num+warpSize-1)/warpSize*warpSize) return;
+  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
   const Scalar inv_dx = 1.0f / dx;
 
   const Scalar _4_dt_invdx2 = 4.0f * dt * inv_dx * inv_dx;
 
   //float3 particle_pos = make_float3(d_p_pos_ptr[idx * 3], d_p_pos_ptr[idx * 3 + 1], d_p_pos_ptr[idx * 3 + 2]);
-  float3 particle_pos = trove::load_warp_contiguous((float3*)(d_p_pos_ptr + idx * 3));
+  float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
+  float3 vel = trove::load_warp_contiguous((float3 *) (d_p_vel_ptr + idx * 3));
+  float9 Cp = trove::load_warp_contiguous((float9 *) (d_p_C_ptr + idx * 9));
+  float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+  Scalar V_0 = d_p_V0_ptr[idx];
+  Scalar mass = d_p_mass_ptr[idx];
+  Scalar J = d_p_J_ptr[idx];
+
 
   float3 Xp = particle_pos * inv_dx;
 
@@ -68,31 +91,31 @@ __global__ void p2gCuda(
                              0.75f - SQR(fx.z - 1.0f)),
                  0.5f * make_float3(SQR(fx.x - 0.5f), SQR(fx.y - 0.5f), SQR(fx.z - 0.5f))};
 
-  Scalar mass = d_p_mass_ptr[idx];
-  float3 vel = trove::load_warp_contiguous((float3*)(d_p_vel_ptr + idx * 3));
 
-  Scalar J_p = d_p_J_ptr[idx];
-  Scalar V_0 = d_p_V0_ptr[idx];
-  float9 Cp = trove::load_warp_contiguous((float9*)(d_p_C_ptr + idx * 9));
+
+
+
+
 
   ////TODO: optimization candidate: multiplication of matrix can be expensive.
-  Scalar m_Jp_3 = J_p * J_p * J_p;
-  Scalar pressure = (10.0f * (1.0f / (m_Jp_3 * m_Jp_3 * J_p) - 1));
-  Scalar cauchy_stress[9] = {pressure, 0, 0, 0, pressure, 0, 0, 0, pressure};
-//  printf("hello from p2g\n");
+//  Scalar m_Jp_3 = J_p * J_p * J_p;
+//  Scalar pressure = (10.0f * (1.0f / (m_Jp_3 * m_Jp_3 * J_p) - 1));
+//  Scalar cauchy_stress[9] = {pressure, 0, 0, 0, pressure, 0, 0, 0, pressure};
+  float9 cauchy_stress = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+  d_p_stress_func_ptr[idx](F, J, cauchy_stress);
 
-  Scalar JVinv = J_p * V_0 * _4_dt_invdx2;
+  Scalar JVinv = J * V_0 * _4_dt_invdx2;
 
   Scalar affine[9] = {
-      cauchy_stress[0] * JVinv + mass * Cp.m[0],
-      cauchy_stress[1] * JVinv + mass * Cp.m[1],
-      cauchy_stress[2] * JVinv + mass * Cp.m[2],
-      cauchy_stress[3] * JVinv + mass * Cp.m[3],
-      cauchy_stress[4] * JVinv + mass * Cp.m[4],
-      cauchy_stress[5] * JVinv + mass * Cp.m[5],
-      cauchy_stress[6] * JVinv + mass * Cp.m[6],
-      cauchy_stress[7] * JVinv + mass * Cp.m[7],
-      cauchy_stress[8] * JVinv + mass * Cp.m[8]
+      cauchy_stress[0] * JVinv + mass * Cp[0],
+      cauchy_stress[1] * JVinv + mass * Cp[1],
+      cauchy_stress[2] * JVinv + mass * Cp[2],
+      cauchy_stress[3] * JVinv + mass * Cp[3],
+      cauchy_stress[4] * JVinv + mass * Cp[4],
+      cauchy_stress[5] * JVinv + mass * Cp[5],
+      cauchy_stress[6] * JVinv + mass * Cp[6],
+      cauchy_stress[7] * JVinv + mass * Cp[7],
+      cauchy_stress[8] * JVinv + mass * Cp[8]
   };
 
   //Scatter the quantity
@@ -127,14 +150,14 @@ __global__ void p2gCuda(
 
 }
 
-__global__ void updateGridCuda(Scalar * __restrict__ d_g_mass_ptr,
-                               Scalar * __restrict__ d_g_vel_ptr,
-                              const float3 gravity,
-                              const Scalar dt,
-                              const unsigned int bound,
-                              const unsigned int grid_x_dim,
-                              const unsigned int grid_y_dim,
-                              const unsigned int grid_z_dim) {
+__global__ void updateGridCuda(Scalar *__restrict__ d_g_mass_ptr,
+                               Scalar *__restrict__ d_g_vel_ptr,
+                               const float3 gravity,
+                               const Scalar dt,
+                               const unsigned int bound,
+                               const unsigned int grid_x_dim,
+                               const unsigned int grid_y_dim,
+                               const unsigned int grid_z_dim) {
   unsigned int grid_idx = blockIdx.x * blockDim.x + threadIdx.x;
   unsigned int grid_num = grid_x_dim * grid_y_dim * grid_z_dim;
   if (grid_idx >= grid_num) return;
@@ -168,33 +191,35 @@ __global__ void updateGridCuda(Scalar * __restrict__ d_g_mass_ptr,
 
 }
 
-__global__ void g2pCuda( Scalar * __restrict__ d_p_mass_ptr,
-                         Scalar * __restrict__ d_p_vel_ptr,
-                         Scalar * __restrict__ d_p_pos_ptr,
-                         Scalar * __restrict__ d_p_F_ptr,
-                         Scalar * __restrict__ d_p_J_ptr,
-                         Scalar * __restrict__ d_p_C_ptr,
-                         Scalar * __restrict__ d_p_V0_ptr,
-                        const Scalar * __restrict__ d_g_mass_ptr,
-                        const Scalar * __restrict__ d_g_vel_ptr,
+__global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
+                        Scalar *__restrict__ d_p_vel_ptr,
+                        Scalar *__restrict__ d_p_pos_ptr,
+                        Scalar *__restrict__ d_p_F_ptr,
+                        Scalar *__restrict__ d_p_J_ptr,
+                        Scalar *__restrict__ d_p_C_ptr,
+                        Scalar *__restrict__ d_p_V0_ptr,
+                        ProjectFunc *__restrict__ d_p_project_func_ptr,
+                        const Scalar *__restrict__ d_g_mass_ptr,
+                        const Scalar *__restrict__ d_g_vel_ptr,
                         const Scalar dt,
                         const Scalar dx,
                         const unsigned int particle_num,
                         const unsigned int grid_x,
                         const unsigned int grid_y,
                         const unsigned int grid_z) {
-const
+  const
   unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx >= (particle_num+warpSize-1)/warpSize*warpSize) return;
+  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
 
   const Scalar inv_dx = 1.0f / dx;
 
   const Scalar _4_invdx2 = 4.0f * inv_dx * inv_dx;
 
-  float3 particle_pos = trove::load_warp_contiguous((float3*)(d_p_pos_ptr + idx * 3));
+  float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
+  float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+  Scalar J = d_p_J_ptr[idx];
 
   float3 Xp = particle_pos * inv_dx;
-
   int3 base = make_int3(Xp - make_float3(0.5f, 0.5f, 0.5f));
   float3 fx = Xp - make_float3(base);
 
@@ -223,51 +248,40 @@ const
         unsigned int grid_1d_index =
             (grid_index.x * grid_y + grid_index.y) * grid_z
                 + grid_index.z;
-        float3 g_vel = make_float3(d_g_vel_ptr[3 * grid_1d_index], d_g_vel_ptr[3 * grid_1d_index + 1], d_g_vel_ptr[3 * grid_1d_index + 2]);
+        float3 g_vel = make_float3(d_g_vel_ptr[3 * grid_1d_index],
+                                   d_g_vel_ptr[3 * grid_1d_index + 1],
+                                   d_g_vel_ptr[3 * grid_1d_index + 2]);
 // trove::load_warp_contiguous((float3*)(d_g_vel_ptr + grid_1d_index * 3));
         new_v += weight * g_vel;
         Scalar result[9] = {0};
         Scalar g_vel_arr[3] = {g_vel.x, g_vel.y, g_vel.z};
         Scalar dpos_arr[3] = {dpos.x, dpos.y, dpos.z};
         vectorOuterProduct(g_vel_arr, dpos_arr, result);
-        new_C.m[0] += weight * _4_invdx2 * result[0];
-        new_C.m[1] += weight * _4_invdx2 * result[1];
-        new_C.m[2] += weight * _4_invdx2 * result[2];
-        new_C.m[3] += weight * _4_invdx2 * result[3];
-        new_C.m[4] += weight * _4_invdx2 * result[4];
-        new_C.m[5] += weight * _4_invdx2 * result[5];
-        new_C.m[6] += weight * _4_invdx2 * result[6];
-        new_C.m[7] += weight * _4_invdx2 * result[7];
-        new_C.m[8] += weight * _4_invdx2 * result[8];
+        new_C[0] += weight * _4_invdx2 * result[0];
+        new_C[1] += weight * _4_invdx2 * result[1];
+        new_C[2] += weight * _4_invdx2 * result[2];
+        new_C[3] += weight * _4_invdx2 * result[3];
+        new_C[4] += weight * _4_invdx2 * result[4];
+        new_C[5] += weight * _4_invdx2 * result[5];
+        new_C[6] += weight * _4_invdx2 * result[6];
+        new_C[7] += weight * _4_invdx2 * result[7];
+        new_C[8] += weight * _4_invdx2 * result[8];
 
       }
     }
   }
-  trove::store_warp_contiguous(new_v, (float3*)(d_p_vel_ptr + idx * 3));
-  trove::store_warp_contiguous(new_C, (float9*)(d_p_C_ptr + idx * 9));
-
-  float3 new_p = trove::load_warp_contiguous((float3*)(d_p_pos_ptr + idx * 3)) + dt * new_v;
-  trove::store_warp_contiguous(new_p, (float3*)(d_p_pos_ptr + idx * 3));
+  d_p_project_func_ptr[idx](F,new_C,J,dt);
 
 
-  //d_p_vel_ptr[idx * 3] = new_v.x;
-  //d_p_vel_ptr[idx * 3 + 1] = new_v.y;
-  //d_p_vel_ptr[idx * 3 + 2] = new_v.z;
-  //d_p_C_ptr[idx * 9] = new_C[0];
-  //d_p_C_ptr[idx * 9 + 1] = new_C[1];
-  //d_p_C_ptr[idx * 9 + 2] = new_C[2];
-  //d_p_C_ptr[idx * 9 + 3] = new_C[3];
-  //d_p_C_ptr[idx * 9 + 4] = new_C[4];
-  //d_p_C_ptr[idx * 9 + 5] = new_C[5];
-  //d_p_C_ptr[idx * 9 + 6] = new_C[6];
-  //d_p_C_ptr[idx * 9 + 7] = new_C[7];
-  //d_p_C_ptr[idx * 9 + 8] = new_C[8];
 
-  //d_p_pos_ptr[idx * 3] += dt * new_v.x;
-  //d_p_pos_ptr[idx * 3 + 1] += dt * new_v.y;
-  //d_p_pos_ptr[idx * 3 + 2] += dt * new_v.z;
+  trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
+  trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
+  trove::store_warp_contiguous(particle_pos + dt * new_v, (float3 *) (d_p_pos_ptr + idx * 3));
+  trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
+  d_p_J_ptr[idx] = J;
 
-  d_p_J_ptr[idx] *= 1 + dt * (new_C.m[0] + new_C.m[4] + new_C.m[8]);
+
+
 
 }
 
@@ -290,6 +304,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        d_p_J_ptr,
                                                        d_p_C_ptr,
                                                        d_p_V0_ptr,
+                                                       d_p_getStress_ptr,
                                                        d_g_mass_ptr,
                                                        d_g_vel_ptr,
                                                        dt,
@@ -312,6 +327,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        d_p_J_ptr,
                                                        d_p_C_ptr,
                                                        d_p_V0_ptr,
+                                                       d_p_project_ptr,
                                                        d_g_mass_ptr,
                                                        d_g_vel_ptr,
                                                        dt,
@@ -321,37 +337,20 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
-//    KernelLaunch("p2g", particle_grid_size, particle_block_size, p2gCuda,
-//               d_p_mass_ptr,
-//               d_p_vel_ptr,
-//               d_p_pos_ptr,
-//               d_p_F_ptr,
-//               d_p_J_ptr,
-//               d_p_C_ptr,
-//               d_p_V0_ptr,
-//               d_g_mass_ptr,
-//               d_g_vel_ptr,
-//               dt, _grid.dx(), particle_num, _grid.getGridDimX(), _grid.getGridDimY(), _grid.getGridDimZ());
-//    KernelLaunch("updateGrid", grid_grid_size, grid_block_size, updateGridCuda,
-//              d_g_mass_ptr,
-//              d_g_vel_ptr,
-//               make_float3(_gravity[0], _gravity[1], _gravity[2]),
-//               dt, bound,
-//               _grid.getGridDimX(), _grid.getGridDimY(), _grid.getGridDimZ()
-//  );
-//    KernelLaunch("g2p", particle_grid_size, particle_block_size, g2pCuda,
-//                d_p_mass_ptr,
-//                d_p_vel_ptr,
-//                d_p_pos_ptr,
-//                d_p_F_ptr,
-//                d_p_J_ptr,
-//                d_p_C_ptr,
-//                d_p_V0_ptr,
-//                d_g_mass_ptr,
-//                d_g_vel_ptr,
-//               dt, _grid.dx(), particle_num, _grid.getGridDimX(), _grid.getGridDimY(), _grid.getGridDimZ());
-
   transferDataFromDevice();
+
+}
+
+void mpm::Engine::configureDeviceParticleType() {
+  fmt::print("setting Device ParticleWise function\n");
+  const unsigned int particle_num = m_sceneParticles.size();
+  int particle_block_size = 64;
+  int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
+
+  setParticleWiseFunction<<<particle_grid_size, particle_block_size>>>(d_p_material_type_ptr,
+                                                                       d_p_getStress_ptr,
+                                                                       d_p_project_ptr,
+                                                                       particle_num);
 
 }
 

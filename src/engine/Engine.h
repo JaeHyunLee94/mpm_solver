@@ -18,6 +18,7 @@
 #include "Entity.h"
 #include "Grid.h"
 #include "Profiler.h"
+#include "cuda/CudaTypes.h"
 namespace mpm {
 
 enum Device {
@@ -73,8 +74,9 @@ class Engine {
     h_p_J_ptr = nullptr;
     h_p_C_ptr = nullptr;
     h_p_V0_ptr = nullptr;
-    h_p_getStress_ptr = nullptr;
-    h_p_project_ptr = nullptr;
+    h_p_material_type_ptr= nullptr;
+
+
     d_p_mass_ptr = nullptr;
     d_p_vel_ptr = nullptr;
     d_p_pos_ptr = nullptr;
@@ -82,6 +84,7 @@ class Engine {
     d_p_J_ptr = nullptr;
     d_p_C_ptr = nullptr;
     d_p_V0_ptr = nullptr;
+    d_p_material_type_ptr = nullptr;
     d_p_getStress_ptr = nullptr;
     d_p_project_ptr = nullptr;
     d_g_mass_ptr = nullptr;
@@ -135,6 +138,7 @@ class Engine {
   void makeAosToSOA();
   void transferDataToDevice();
   void transferDataFromDevice();
+  void configureDeviceParticleType();
 
 //  void p2gCudaWrapper(int gs, int bs);
 //  void g2pCudaWrapper(int gs, int bs);
@@ -161,8 +165,8 @@ class Engine {
   Scalar *h_p_J_ptr; //scalar
   Scalar *h_p_C_ptr; //3x3
   Scalar *h_p_V0_ptr;
-  nvstd::function<void(float *, float *)> *h_p_getStress_ptr;
-  nvstd::function<void(float *, float *)> *h_p_project_ptr;
+  mpm::MaterialType* h_p_material_type_ptr;
+
 
   Scalar *d_p_mass_ptr; //scalar
   Scalar *d_p_vel_ptr; //vec3
@@ -171,8 +175,9 @@ class Engine {
   Scalar *d_p_J_ptr; //scalar
   Scalar *d_p_C_ptr; //3x3
   Scalar *d_p_V0_ptr;
-  nvstd::function<void(float *, float *)> *d_p_getStress_ptr;
-  nvstd::function<void(float *, float *)> *d_p_project_ptr;
+  mpm::MaterialType* d_p_material_type_ptr;
+  StressFunc *d_p_getStress_ptr;
+  ProjectFunc *d_p_project_ptr;
 
   Scalar *d_g_mass_ptr;
   Scalar *d_g_vel_ptr;

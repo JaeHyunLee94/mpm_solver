@@ -23,6 +23,8 @@ using Mat2d = Eigen::Matrix2d;
 using Mat3d = Eigen::Matrix3d;
 using Mat2f = Eigen::Matrix2f;
 using Mat3f = Eigen::Matrix3f;
+
+
 }
 
 #endif //MPM_SOLVER_SRC_SIMULATION_TYPES_H_

@@ -5,10 +5,7 @@
 #include "Particles.h"
 
 #include "MaterialModel.h"
-//void mpm::Particles::addParticle(Vec3f pos, MaterialType material_type) {
-//  this->_particleList.emplace_back(Particle{pos, material_type});
-//
-//}
+
 unsigned long long mpm::Particles::getParticleNum() {
   return mParticleList.size();
 }
@@ -27,13 +24,13 @@ void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType mate
 
     switch (particle.m_material_type) {
       case mpm::MaterialType::WeaklyCompressibleWater: {
-        particle.getStress= mpm::MaterialModel::getStressWeaklyCompressibleWater;
-        particle.project= mpm::MaterialModel::projectWeaklyCompressibleWater;
+        particle.getStress= mpm::getStressWeaklyCompressibleWater;
+        particle.project= mpm::projectWeaklyCompressibleWater;
         break;
       }
       case mpm::MaterialType::CorotatedJelly: {
-        particle.getStress=  mpm::MaterialModel::getStressCorotatedJelly;
-        particle.project=  mpm::MaterialModel::projectCorotatedJelly;
+        particle.getStress=  mpm::getStressCorotatedJelly;
+        particle.project=  mpm::projectCorotatedJelly;
         break;
       }
     }
