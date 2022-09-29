@@ -201,6 +201,7 @@ __global__ void updateGridCuda(Scalar *__restrict__ d_g_mass_ptr,
     }
   }
 
+
 }
 
 __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,

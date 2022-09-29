@@ -130,6 +130,8 @@ int main() {
   run();
 
 
+  matplotlibcpp::plot({1,2,3,4});
+  matplotlibcpp::show();
   fmt::print("reach end of main\n");
   delete renderer;
   delete handler;

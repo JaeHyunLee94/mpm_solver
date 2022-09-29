@@ -4,7 +4,7 @@
 
 #ifndef MPM_SOLVER_ENGINE_H
 #define MPM_SOLVER_ENGINE_H
-
+#include <matplotlibcpp.h>
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -19,6 +19,7 @@
 #include "Grid.h"
 #include "Profiler.h"
 #include "cuda/CudaTypes.h"
+
 namespace mpm {
 
 enum Device {
@@ -98,6 +99,8 @@ class Engine {
         fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
     _engineConfig.m_device = CPU;
 #endif
+    mPotentialEnergy.reserve(1000);
+    mKineticEnergy.reserve(1000);
     }
 
 
@@ -124,6 +127,8 @@ class Engine {
   EngineConfig getEngineConfig();
 
   std::vector<Particle> m_sceneParticles;
+  std::vector<Scalar> mPotentialEnergy;
+  std::vector<Scalar> mKineticEnergy;
 
  private:
 
@@ -140,9 +145,6 @@ class Engine {
   void transferDataFromDevice();
   void configureDeviceParticleType();
 
-//  void p2gCudaWrapper(int gs, int bs);
-//  void g2pCudaWrapper(int gs, int bs);
-//  void updateGridCudaWrapper(int gs, int bs);
 
 
   EngineConfig _engineConfig;
