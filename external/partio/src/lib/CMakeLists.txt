@@ -51,9 +51,9 @@ target_include_directories(partio
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-if (ZLIB_FOUND)
-    target_link_libraries(partio PUBLIC ZLIB::ZLIB)
-endif()
+#if (ZLIB_FOUND)
+    target_link_libraries(partio PUBLIC zlibstatic)#ZLIB::ZLIB)
+#endif()
 
 install(TARGETS partio DESTINATION ${CMAKE_INSTALL_LIBDIR})
 

@@ -119,15 +119,15 @@ set(OpenGL_GL_PREFERENCE GLVND)
 
 ## Search for useful libraries
 find_package(Threads REQUIRED)
-find_package(ZLIB)
-if (ZLIB_FOUND)
-    add_definitions(-DPARTIO_USE_ZLIB)
-else()
-    set(ZLIB_LIBRARY "")
-endif()
+#find_package(ZLIB)
+#if (ZLIB_FOUND)
+#    add_definitions(-DPARTIO_USE_ZLIB)
+#else()
+#    set(ZLIB_LIBRARY "")
+#endif()
 
 # Make modules able to see partio library
-set(PARTIO_LIBRARIES partio ${ZLIB_LIBRARY})
+set(PARTIO_LIBRARIES partio zlibstatic)#${ZLIB_LIBRARY})
 
 if (${PARTIO_GTEST_ENABLED})
     set(GTEST_LOCATION "/usr" CACHE STRING "gtest installation prefix")

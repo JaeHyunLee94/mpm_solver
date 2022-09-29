@@ -106,7 +106,28 @@ class Engine {
 
   };
 
-  ~Engine() = default; //TODO: delete all ptr
+  ~Engine(){
+    delete h_p_pos_ptr;
+    delete h_p_vel_ptr;
+    delete h_p_mass_ptr;
+    delete h_p_F_ptr;
+    delete h_p_J_ptr;
+    delete h_p_C_ptr;
+    delete h_p_V0_ptr;
+    delete h_p_material_type_ptr;
+    delete d_p_pos_ptr;
+    delete d_p_vel_ptr;
+    delete d_p_mass_ptr;
+    delete d_p_F_ptr;
+    delete d_p_J_ptr;
+    delete d_p_C_ptr;
+    delete d_p_V0_ptr;
+    delete d_p_material_type_ptr;
+    delete d_p_getStress_ptr;
+    delete d_p_project_ptr;
+    delete d_g_mass_ptr;
+    delete d_g_vel_ptr;
+  } ; //TODO: delete all ptr
 
 
   void integrate(Scalar dt);

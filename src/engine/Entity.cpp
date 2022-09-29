@@ -4,13 +4,10 @@
 
 #include "Entity.h"
 
-void mpm::Entity::loadFromFile(const std::string &filename, unsigned int particle_num, bool usePoisson) {
 
-  if (usePoisson) {
+void mpm::Entity::loadFromFile(const char *filename) {
 
-  } else {
 
-  }
 }
 void mpm::Entity::loadCube(mpm::Vec3f center, mpm::Scalar len, unsigned int particle_num, bool usePoisson) {
 
