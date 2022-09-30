@@ -33,8 +33,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#include "../Partio.h"
 #include "../core/ParticleHeaders.h"
-#include "io.h"
+#include "ZIP.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cassert>
+#include <memory>
+
 
 namespace Partio
 {
@@ -101,7 +109,7 @@ string scanString(istream& input)
 
 ParticlesDataMutable* readGEO(const char* filename,const bool headersOnly,std::ostream* errorStream)
 {
-    unique_ptr<istream> input(io::unzip(filename));
+    unique_ptr<istream> input(Gzip_In(filename,ios::in));
     if(!*input){
         if(errorStream) *errorStream<<"Partio: Can't open particle data file: "<<filename<<endl;
         return 0;
@@ -217,7 +225,7 @@ ParticlesDataMutable* readGEO(const char* filename,const bool headersOnly,std::o
 
 
 template<class T>
-void writeType(ostream& output,const ParticlesData&,const ParticleAttribute& attrib,
+void writeType(ostream& output,const ParticlesData& p,const ParticleAttribute& attrib,
     const ParticleAccessor& accessor,const ParticlesData::const_iterator& iterator)
 {
     const T* data=accessor.raw<T>(iterator);
@@ -229,7 +237,11 @@ void writeType(ostream& output,const ParticlesData&,const ParticleAttribute& att
 
 bool writeGEO(const char* filename,const ParticlesData& p,const bool compressed,std::ostream* errorStream)
 {
-    unique_ptr<ostream> output(io::write(filename, compressed));
+    unique_ptr<ostream> output(
+        compressed ? 
+        Gzip_Out(filename,ios::out)
+        :new ofstream(filename,ios::out));
+
     *output<<"PGEOMETRY V5"<<endl;
     *output<<"NPoints "<<p.numParticles()<<" NPrims "<<1<<endl;
     *output<<"NPointGroups "<<0<<" NPrimGroups "<<0<<endl;

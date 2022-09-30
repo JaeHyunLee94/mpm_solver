@@ -41,9 +41,10 @@ Modifications from: github user: redpawfx (redpawFX@gmail.com)  and Luma Picture
 #ifndef PARTIO_WIN32
 #ifdef PARTIO_USE_ZLIB
 #include "../Partio.h"
-#include "io.h"
 #include "PartioEndian.h"
 #include "../core/ParticleHeaders.h"
+#include <string.h>
+
 
 //#define USE_ILMHALF    // use Ilm's Half library
 #define AUTO_CASES    // auto upcase ie:position => Position
@@ -52,6 +53,10 @@ Modifications from: github user: redpawfx (redpawFX@gmail.com)  and Luma Picture
 #include <half.h>
 #endif
 
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <memory>
 #include <zlib.h>
 #endif
 namespace Partio{
@@ -143,7 +148,7 @@ static bool write_buffer(std::ostream& os, z_stream& z, char* out_buf, void* p, 
 
 ParticlesDataMutable* readPRT(const char* filename,const bool headersOnly,std::ostream* errorStream)
 {
-    std::unique_ptr<std::istream> input(io::read(filename));
+    std::unique_ptr<std::istream> input(new std::ifstream(filename,std::ios::in|std::ios::binary));
     if (!*input) {
         if(errorStream) *errorStream<<"Partio: Unable to open file "<<filename<<std::endl;
         return 0;
@@ -328,7 +333,7 @@ ParticlesDataMutable* readPRT(const char* filename,const bool headersOnly,std::o
 		}
 	}
     
-    delete[] prt_buf;
+    delete prt_buf;
     
     if (inflateEnd( &z ) != Z_OK) {
         if(errorStream) *errorStream<<"Zlib inflateEnd error"<<std::endl;
@@ -432,14 +437,14 @@ bool writePRT(const char* filename,const ParticlesData& p,const bool /*compresse
 
 
 namespace Partio{
-ParticlesDataMutable* readPRT(const char* filename,const bool headersOnly, std::ostream* error)
+ParticlesDataMutable* readPRT(const char* filename,const bool headersOnly, std::ostream* errorStream)
 {
     std::cerr<<"PRT not supported on windows"<<std::endl;
     return 0;
 }
 
 
-bool writePRT(const char* filename,const ParticlesData& p,const bool /*compressed*/, std::ostream* error)
+bool writePRT(const char* filename,const ParticlesData& p,const bool /*compressed*/, std::ostream* errorStream)
 {
     std::cerr<<"PRT not supported on windows"<<std::endl;
     return false;

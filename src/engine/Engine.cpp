@@ -218,6 +218,8 @@ void mpm::Engine::reset(Particles &particle, EngineConfig engine_config) {
   deleteAllParticle();
   setGravity(Vec3f(0, 0, 0));
   addParticles(particle);
+  setIsFirstStep(true);
+
 
 }
 void mpm::Engine::deleteAllParticle() {
@@ -233,8 +235,7 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
         profiler.start("init");
         initGrid();
         profiler.endAndReport("init");
-        profiler.start("p2g");
-        p2g(dt);
+        profiler.start("p2g");        p2g(dt);
         profiler.endAndReport("p2g");
         profiler.start("updateGrid");
         updateGrid(dt);
@@ -252,8 +253,8 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
 
 void mpm::Engine::transferDataToDevice() {
-  static bool is_first = true;
-  if (is_first) {
+
+  if (_is_first_step) {
     makeAosToSOA();
     fmt::print("Cuda Allocating...\n");
 
@@ -281,7 +282,7 @@ void mpm::Engine::transferDataToDevice() {
                                    cudaMemcpyHostToDevice));
     configureDeviceParticleType();
 
-    is_first = false;
+    _is_first_step = false;
   }
 
 

@@ -89,7 +89,7 @@ class Renderer {
 
 //    void render(mpm::Engine &engine);
   void renderWithGUI(mpm::Engine &engine, GUIwrapper &gui);
-
+  void setDefaultParticleColor(float r, float g, float b, float a=1.0f){m_default_particle_color[0]=r;m_default_particle_color[1]=g;m_default_particle_color[2]=b;m_default_particle_color[3]=a;};
   void terminate();
 
 

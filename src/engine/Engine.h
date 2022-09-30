@@ -115,18 +115,19 @@ class Engine {
     delete h_p_C_ptr;
     delete h_p_V0_ptr;
     delete h_p_material_type_ptr;
-    delete d_p_pos_ptr;
-    delete d_p_vel_ptr;
-    delete d_p_mass_ptr;
-    delete d_p_F_ptr;
-    delete d_p_J_ptr;
-    delete d_p_C_ptr;
-    delete d_p_V0_ptr;
-    delete d_p_material_type_ptr;
-    delete d_p_getStress_ptr;
-    delete d_p_project_ptr;
-    delete d_g_mass_ptr;
-    delete d_g_vel_ptr;
+
+    cudaFree(d_p_pos_ptr);
+    cudaFree(d_p_vel_ptr);
+    cudaFree(d_p_mass_ptr);
+    cudaFree(d_p_F_ptr);
+    cudaFree(d_p_J_ptr);
+    cudaFree(d_p_C_ptr);
+    cudaFree(d_p_V0_ptr);
+    cudaFree(d_p_material_type_ptr);
+    cudaFree(d_p_getStress_ptr);
+    cudaFree(d_p_project_ptr);
+    cudaFree(d_g_mass_ptr);
+    cudaFree(d_g_vel_ptr);
   } ; //TODO: delete all ptr
 
 
@@ -136,6 +137,7 @@ class Engine {
 
   void reset(Particles &particle, EngineConfig engine_config);
   void setGravity(Vec3f gravity);
+  void setIsFirstStep(bool is_first) {_is_first_step=is_first;};
   inline bool isCudaAvailable() const { return _deviceCount > 0; };
   void setEngineConfig(EngineConfig engine_config);
   float *getGravityFloatPtr();
@@ -172,6 +174,7 @@ class Engine {
   Vec3f _gravity{0, 0, 0};
   Grid _grid;
   unsigned int bound = 3;
+  bool _is_first_step = true;
   bool _isCreated = false;
   int _deviceCount;
   unsigned long long _currentFrame;

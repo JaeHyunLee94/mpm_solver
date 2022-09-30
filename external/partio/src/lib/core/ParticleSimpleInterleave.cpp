@@ -63,9 +63,9 @@ ParticlesSimpleInterleave::
 }
 
 void ParticlesSimpleInterleave::
-release()
+release() const
 {
-    freeCached(this);
+    freeCached(const_cast<ParticlesSimpleInterleave*>(this));
 }
 
 
@@ -78,7 +78,7 @@ numParticles() const
 int ParticlesSimpleInterleave::
 numAttributes() const
 {
-    return static_cast<int>(attributes.size());
+    return attributes.size();
 }
 
 int ParticlesSimpleInterleave::
@@ -153,7 +153,7 @@ sort()
 }
 
 void ParticlesSimpleInterleave::
-findPoints(const float[3],const float[3],std::vector<ParticleIndex>&) const
+findPoints(const float bboxMin[3],const float bboxMax[3],std::vector<ParticleIndex>& points) const
 {
 #if 0
     if(!kdtree){
@@ -171,8 +171,8 @@ findPoints(const float[3],const float[3],std::vector<ParticleIndex>&) const
 }
 
 float ParticlesSimpleInterleave::
-findNPoints(const float[3],const int,const float,std::vector<ParticleIndex>&,
-    std::vector<float>&) const
+findNPoints(const float center[3],const int nPoints,const float maxRadius,std::vector<ParticleIndex>& points,
+    std::vector<float>& pointDistancesSquared) const
 {
 #if 0
     if(!kdtree){
@@ -189,8 +189,8 @@ findNPoints(const float[3],const int,const float,std::vector<ParticleIndex>&,
 }
 
 int ParticlesSimpleInterleave::
-findNPoints(const float[3], int, const float, ParticleIndex *,
-    float *, float *) const
+findNPoints(const float center[3],int nPoints,const float maxRadius, ParticleIndex *points,
+    float *pointDistancesSquared, float *finalRadius2) const
 {
     // TODO: I guess they don't support this lookup here
     return 0;
@@ -208,10 +208,10 @@ addAttribute(const char* attribute,ParticleAttributeType type,const int count)
     ParticleAttribute attr;
     attr.name=attribute;
     attr.type=type;
-    attr.attributeIndex=static_cast<int>(attributes.size()); //  all arrays separate so we don't use this here!
+    attr.attributeIndex=attributes.size(); //  all arrays separate so we don't use this here!
     attr.count=count;
     attributes.push_back(attr);
-    nameToAttribute[attribute]=static_cast<int>(attributes.size()-1);
+    nameToAttribute[attribute]=attributes.size()-1;
 
     // repackage data for new attribute
     int oldStride=stride;
@@ -323,14 +323,14 @@ setupIteratorNextBlock(Partio::ParticleIterator<true>& iterator) const
 }
 
 void ParticlesSimpleInterleave::
-setupAccessor(Partio::ParticleIterator<false>&,ParticleAccessor& accessor)
+setupAccessor(Partio::ParticleIterator<false>& iterator,ParticleAccessor& accessor)
 {
     accessor.stride=stride;
     accessor.basePointer=data+attributeOffsets[accessor.attributeIndex];
 }
 
 void ParticlesSimpleInterleave::
-setupAccessor(Partio::ParticleIterator<true>&,ParticleAccessor& accessor) const
+setupAccessor(Partio::ParticleIterator<true>& iterator,ParticleAccessor& accessor) const
 {
     accessor.stride=stride;
     accessor.basePointer=data+attributeOffsets[accessor.attributeIndex];
@@ -350,7 +350,8 @@ fixedDataInternal(const FixedAttribute& attribute) const
 }
 
 void ParticlesSimpleInterleave::
-dataInternalMultiple(const ParticleAttribute&,const int,const ParticleIndex*,const bool,char*) const
+dataInternalMultiple(const ParticleAttribute& attribute,const int indexCount,
+    const ParticleIndex* particleIndices,const bool sorted,char* values) const
 {
 #if 0
     assert(attribute.attributeIndex>=0 && attribute.attributeIndex<(int)attributes.size());
@@ -363,8 +364,8 @@ dataInternalMultiple(const ParticleAttribute&,const int,const ParticleIndex*,con
 }
 
 void ParticlesSimpleInterleave::
-dataAsFloat(const ParticleAttribute&,const int,
-    const ParticleIndex*,const bool,float*) const
+dataAsFloat(const ParticleAttribute& attribute,const int indexCount,
+    const ParticleIndex* particleIndices,const bool sorted,float* values) const
 {
 #if 0
     assert(attribute.attributeIndex>=0 && attribute.attributeIndex<(int)attributes.size());
@@ -386,7 +387,7 @@ registerIndexedStr(const ParticleAttribute& attribute,const char* str)
     IndexedStrTable& table=attributeIndexedStrs[attribute.attributeIndex];
     std::map<std::string,int>::const_iterator it=table.stringToIndex.find(str);
     if(it!=table.stringToIndex.end()) return it->second;
-    int newIndex=static_cast<int>(table.strings.size());
+    int newIndex=table.strings.size();
     table.strings.push_back(str);
     table.stringToIndex[str]=newIndex;
     return newIndex;

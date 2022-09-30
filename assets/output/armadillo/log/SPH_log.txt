@@ -1,0 +1,30 @@
+[2022-09-30 16:42:15] Info:    SPlisHSPlasH version: 2.11.2
+[2022-09-30 16:42:15] Debug:   Git refspec:          GITDIR-NOTFOUND
+[2022-09-30 16:42:15] Debug:   Git SHA1:             GITDIR-NOTFOUND
+[2022-09-30 16:42:15] Debug:   Git status:           HEAD-HASH-NOTFOUND
+[2022-09-30 16:42:15] Debug:   Host name:            DESKTOP-RNDR2AF
+[2022-09-30 16:42:15] Info:    Input = armadillo.obj
+[2022-09-30 16:42:15] Info:    Output = armadillo.bgeo
+[2022-09-30 16:42:15] Info:    Mode: 4
+[2022-09-30 16:42:15] Info:    Radius: 0.004
+[2022-09-30 16:42:15] Info:    Scale: 1.4, 1.4, 1.4
+[2022-09-30 16:42:15] Info:    SPH steps: 100
+[2022-09-30 16:42:15] Info:    CFL Factor: 0.25
+[2022-09-30 16:42:15] Info:    Viscosity coefficient: 0.25
+[2022-09-30 16:42:15] Info:    Stiffness coefficient: 10000
+[2022-09-30 16:42:15] Info:    Time step size: 0.0005
+[2022-09-30 16:42:15] Info:    Cohesion coefficient: 4
+[2022-09-30 16:42:15] Info:    Adhesion coefficient: 2
+[2022-09-30 16:42:15] Info:    Loading armadillo.obj
+[2022-09-30 16:42:15] Info:    Number of triangles: 30000
+[2022-09-30 16:42:15] Info:    Number of vertices: 15002
+[2022-09-30 16:42:15] Info:    Loaded SDF cache file: C:/Users/test/Desktop/github/mpm_solver/assets/Cache/armadillo_61b96517ba07904be82bb375668a28ce_s1.4_1.4_1.4_r30_30_30_i0.csdf
+[2022-09-30 16:42:15] Info:    Generated samples: 60587
+[2022-09-30 16:42:26] Info:    Time sum: neighborhoodSearch: 1149.96 ms
+[2022-09-30 16:42:26] Info:    Time sum: timeStep: 3555.61 ms
+[2022-09-30 16:42:26] Info:    ---------------------------------------------------------------------------
+
+[2022-09-30 16:42:26] Info:    Average time: neighborhoodSearch: 11.4996 ms
+[2022-09-30 16:42:26] Info:    Average time: timeStep: 35.5561 ms
+[2022-09-30 16:42:26] Info:    ---------------------------------------------------------------------------
+

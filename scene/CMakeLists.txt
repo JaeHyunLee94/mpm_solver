@@ -39,7 +39,6 @@ set_target_properties(
 #        PROPERTIES
 #        CUDA_SEPARABLE_COMPILATION ON)
 add_executable(jelly "jelly.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
-
 target_link_libraries(jelly PUBLIC renderer engine  imgui  glfw)
 target_include_directories(jelly PUBLIC  renderer engine  glfw )
 set_target_properties(
@@ -52,5 +51,13 @@ target_link_libraries(water_fall_bunny PUBLIC renderer engine  imgui  glfw)
 target_include_directories(water_fall_bunny PUBLIC  renderer engine  glfw )
 set_target_properties(
         water_fall_bunny
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(jelly_armadilo "jelly_armadilo.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
+target_link_libraries(jelly_armadilo PUBLIC renderer engine  imgui  glfw)
+target_include_directories(jelly_armadilo PUBLIC  renderer engine  glfw )
+set_target_properties(
+        jelly_armadilo
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)

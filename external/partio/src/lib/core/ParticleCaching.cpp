@@ -79,11 +79,11 @@ void freeCached(ParticlesData* particles)
 
     std::map<ParticlesData*,int>::iterator i=cachedParticlesCount.find(particles);
     if(i==cachedParticlesCount.end()){ // Not found in cache, just free
-        delete particles;
+        delete (ParticlesInfo*)particles;
     }else{ // found in cache
         i->second--; // decrement ref count
         if(i->second==0){ // ref count is now zero, remove from structure
-            delete particles;
+            delete (ParticlesInfo*)particles;
             cachedParticlesCount.erase(i);
             for(std::map<std::string,ParticlesData*>::iterator i2=cachedParticles.begin();
                 i2!=cachedParticles.end();++i2){
@@ -99,12 +99,12 @@ void freeCached(ParticlesData* particles)
     mutex.unlock();
 }
 
-void beginCachedAccess(ParticlesData*)
+void beginCachedAccess(ParticlesData* particles)
 {
     // TODO: for future use
 }
 
-void endCachedAccess(ParticlesData*)
+void endCachedAccess(ParticlesData* particles)
 {
     // TODO: for future use
 }

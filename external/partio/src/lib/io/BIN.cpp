@@ -37,8 +37,16 @@ Some code for this format  was helped along  by referring to an implementation b
 Modifications from: github user: redpawfx (redpawFX@gmail.com)  and Luma Pictures  2011
 
 */
+
+#include "../Partio.h"
 #include "../core/ParticleHeaders.h"
-#include "io.h"
+#include "PartioEndian.h"
+#include "ZIP.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <memory>
 
 namespace Partio{
 
@@ -84,7 +92,8 @@ typedef struct{
 
 ParticlesDataMutable* readBIN(const char* filename, const bool headersOnly,std::ostream* errorStream){
 
-    unique_ptr<istream> input(io::read(filename));
+    unique_ptr<istream> input(new ifstream(filename,ios::in|ios::binary));
+
     if(!*input){
         if(errorStream) *errorStream << "Partio: Unable to open file " << filename << endl;
         return 0;
@@ -268,7 +277,10 @@ ParticlesDataMutable* readBIN(const char* filename, const bool headersOnly,std::
 
 bool writeBIN(const char* filename,const ParticlesData& p,const bool /*compressed*/,std::ostream* errorStream)
 {
-    unique_ptr<ostream> output(io::write(filename));
+
+    unique_ptr<ostream> output(
+    new ofstream(filename,ios::out|ios::binary));
+
     if (!*output) {
         if(errorStream) *errorStream<<"Partio Unable to open file "<<filename<<endl;
         return false;
@@ -280,19 +292,15 @@ bool writeBIN(const char* filename,const ParticlesData& p,const bool /*compresse
     for(int i = 0; i < 250; i++)
     {header.fluidName[i] = 0;}
     string str = "partioExport";
-#ifdef PARTIO_WIN32
-	str._Copy_s(header.fluidName,15,0);  //  fluid name
-#else
-	str.copy(header.fluidName,15,0);  //  fluid name
-#endif
+    str.copy(header.fluidName,15,0);  //  fluid name
     header.framePerSecond = 24; // frames per second
     header.scaleScene = 1.0; // scene scale
     header.fluidType = 9; // fluid type
     header.version =  11; // version (11 is most current)
     header.frameNumber =  1; // frame number
-    header.elapsedSimulationTime = 0.0416666f; //   time elapsed (in seconds)
+    header.elapsedSimulationTime = 0.0416666; //   time elapsed (in seconds)
     header.numParticles = p.numParticles(); // number of particles
-    header.radius = 0.1f; // radius of emitter
+    header.radius = 0.1; // radius of emitter
     header.pressure[0] = 1.0; // max, min, and avg pressure
     header.pressure[1] = 1.0;
     header.pressure[2] = 1.0;

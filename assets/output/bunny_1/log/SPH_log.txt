@@ -1,0 +1,30 @@
+[2022-09-30 16:30:30] Info:    SPlisHSPlasH version: 2.11.2
+[2022-09-30 16:30:30] Debug:   Git refspec:          GITDIR-NOTFOUND
+[2022-09-30 16:30:30] Debug:   Git SHA1:             GITDIR-NOTFOUND
+[2022-09-30 16:30:30] Debug:   Git status:           HEAD-HASH-NOTFOUND
+[2022-09-30 16:30:30] Debug:   Host name:            DESKTOP-RNDR2AF
+[2022-09-30 16:30:30] Info:    Input = bunny_1.obj
+[2022-09-30 16:30:30] Info:    Output = bunny_1.bgeo
+[2022-09-30 16:30:30] Info:    Mode: 4
+[2022-09-30 16:30:30] Info:    Radius: 0.007
+[2022-09-30 16:30:30] Info:    Scale: 1.2, 1.2, 1.2
+[2022-09-30 16:30:30] Info:    SPH steps: 100
+[2022-09-30 16:30:30] Info:    CFL Factor: 0.25
+[2022-09-30 16:30:30] Info:    Viscosity coefficient: 0.25
+[2022-09-30 16:30:30] Info:    Stiffness coefficient: 10000
+[2022-09-30 16:30:30] Info:    Time step size: 0.0005
+[2022-09-30 16:30:30] Info:    Cohesion coefficient: 4
+[2022-09-30 16:30:30] Info:    Adhesion coefficient: 2
+[2022-09-30 16:30:30] Info:    Loading bunny_1.obj
+[2022-09-30 16:30:31] Info:    Number of triangles: 69451
+[2022-09-30 16:30:31] Info:    Number of vertices: 34834
+[2022-09-30 16:30:31] Info:    Loaded SDF cache file: C:/Users/test/Desktop/github/mpm_solver/assets/Cache/bunny_1_96a93467e17c7a64b853066b624ca07e_s1.2_1.2_1.2_r30_30_30_i0.csdf
+[2022-09-30 16:30:31] Info:    Generated samples: 16932
+[2022-09-30 16:30:36] Info:    Time sum: neighborhoodSearch: 615.706 ms
+[2022-09-30 16:30:36] Info:    Time sum: timeStep: 3228.96 ms
+[2022-09-30 16:30:36] Info:    ---------------------------------------------------------------------------
+
+[2022-09-30 16:30:36] Info:    Average time: neighborhoodSearch: 6.15706 ms
+[2022-09-30 16:30:36] Info:    Average time: timeStep: 32.2896 ms
+[2022-09-30 16:30:36] Info:    ---------------------------------------------------------------------------
+
