@@ -34,7 +34,7 @@ void initEngine(mpm::EngineConfig config) {
   entity.loadFromFile("../../assets/armadillo_rot.bgeo");
 
   mpm::Particles particles
-      (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(-2, -2, 0)); //TODO: rho, initvol
+      (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(5, 5, 0)); //TODO: rho, initvol
 
   engine->addParticles(particles);
 
