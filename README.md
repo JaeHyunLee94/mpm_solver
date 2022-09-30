@@ -30,8 +30,8 @@ make
 These scenes are in the src/scene folder
 
 <!-- <img src = "https://user-images.githubusercontent.com/46246202/193274158-6b4dcf1b-aef7-4ea6-b5a5-99b39527ac15.gif" width="70%"|height="70%"> -->
-<img src="https://github.com/favicon.ico](https://user-images.githubusercontent.com/46246202/193274158-6b4dcf1b-aef7-4ea6-b5a5-99b39527ac15.gif" width="48">
-![water](https://user-images.githubusercontent.com/46246202/193274158-6b4dcf1b-aef7-4ea6-b5a5-99b39527ac15.gif){: width="70%" height="70%"}
+<img src="https://github.com/favicon.ico](https://user-images.githubusercontent.com/46246202/193274158-6b4dcf1b-aef7-4ea6-b5a5-99b39527ac15.gif" width=50% height=50%">
+![water](https://user-images.githubusercontent.com/46246202/193274158-6b4dcf1b-aef7-4ea6-b5a5-99b39527ac15.gif)
 ![water_bunny](https://user-images.githubusercontent.com/46246202/193274175-186af6bd-3afb-42ae-a073-0b05b8167c7d.gif)
 ![jelly_armadillo](https://user-images.githubusercontent.com/46246202/193274094-fcbeb376-9767-4972-a11a-f7e301218623.gif)
 
