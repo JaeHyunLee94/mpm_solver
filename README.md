@@ -15,7 +15,7 @@ make
 (or give -G option depending on your preference.)
 
 ## Features
-- [x] MLS-MPM
+- [x] [MLS-MPM](https://yzhu.io/publication/mpmmls2018siggraph/paper.pdf)
 - [x] Mesh Importer
 - [x] CUDA 
 - [x] OpenMP
