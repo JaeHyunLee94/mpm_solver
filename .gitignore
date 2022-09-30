@@ -39,3 +39,5 @@ cmake-build-relwithdebinfo/
 build/
 .vs/
 out/
+./assets/output/
+./assets/Cache/
