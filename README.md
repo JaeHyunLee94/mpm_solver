@@ -15,12 +15,12 @@ make
 (or give -G option depending on your preference.)
 
 ## Features
--[x] MLS-MPM
--[x] Mesh Importer
--[x] CUDA 
+- [x] MLS-MPM
+- [x] Mesh Importer
+- [x] CUDA 
 - [x] OpenMP
 - [x] OpenGL Renderer
-- [x]  GUI Widget
+- [x] GUI Widget
 - [ ] Mesh Exporter
 - [ ] Cross platform
 - [ ] Mesh Obstacle
