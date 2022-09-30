@@ -2,7 +2,7 @@
 
 This is the simple CUDA, OpenMP based MPM(Material Point Method) Engine.
 
-This Project is for research purpose and is under developing.
+This Project is under developing.
 
 ## Build instruction
 Make sure that your system has CUDA.
@@ -26,7 +26,7 @@ make
 - [ ] Mesh Obstacle
 - [ ] 2D Cloth, Hair
 
-## Resulting Scenes
+## Sample Scenes
 These scenes are in the src/scene folder
 
 
