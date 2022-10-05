@@ -42,6 +42,8 @@ struct float9{
 
 using StressFunc = nvstd::function<void( float9&, Scalar&,float9&)>;
 using ProjectFunc= nvstd::function<void(float9& ,float9&,Scalar&, Scalar)> ;
+using ParticleConstraintFunc = nvstd::function<void(int , Scalar*,Scalar*)>;
+//using GridConstraintFunc = nvstd::function<void(int,int,int,Scalar*,Scalar*)>;
 //TODO: index operator overloading
 
 }

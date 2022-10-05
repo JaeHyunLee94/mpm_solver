@@ -322,7 +322,7 @@ void mpm::Engine::transferDataToDevice() {
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 void mpm::Engine::transferDataFromDevice() {
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_mass_ptr,
                             d_p_mass_ptr,
                             sizeof(Scalar) * m_sceneParticles.size(),

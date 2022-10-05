@@ -61,3 +61,6 @@ set_target_properties(
         jelly_armadilo
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
+target_compile_options(jelly_armadilo PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+        --extended-lambda
+        >)

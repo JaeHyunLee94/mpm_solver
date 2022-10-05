@@ -298,6 +298,21 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
 
 }
 
+//__global__ void processParticleConstraint(
+//                                          Scalar *__restrict__ d_p_pos_ptr,
+//                                          Scalar *__restrict__ d_p_vel_ptr,
+//                                          ParticleConstraintFunc  particle_constraint_func,
+//                                          const unsigned int particle_num
+//) {
+//  const
+//  unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+//  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+//  particle_constraint_func(idx,d_p_pos_ptr,d_p_vel_ptr);
+//
+//
+//
+//}
+
 void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   const unsigned int particle_num = m_sceneParticles.size();
@@ -327,6 +342,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
+
   updateGridCuda<<<grid_grid_size, grid_block_size>>>(d_g_mass_ptr,
                                                       d_g_vel_ptr,
                                                       make_float3(_gravity[0], _gravity[1], _gravity[2]),
@@ -350,6 +366,11 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
+//  processParticleConstraint <<<particle_grid_size, particle_block_size>>>(d_p_pos_ptr,
+//                                                                       d_p_vel_ptr,
+//                                                                       particle_constraint_func,
+//                                                                       particle_num);
+
   transferDataFromDevice();
 
 }
@@ -359,12 +380,15 @@ void mpm::Engine::configureDeviceParticleType() {
   const unsigned int particle_num = m_sceneParticles.size();
   int particle_block_size = 64;
   int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
   setParticleWiseFunction<<<particle_grid_size, particle_block_size>>>(d_p_material_type_ptr,
                                                                        d_p_getStress_ptr,
                                                                        d_p_project_ptr,
                                                                        particle_num);
 
 }
+
+
+
 
 }

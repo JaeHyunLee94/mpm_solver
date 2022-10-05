@@ -53,6 +53,7 @@ struct EngineConfig {
 
 };
 
+
 class Engine {
 
  public:
@@ -75,8 +76,7 @@ class Engine {
     h_p_J_ptr = nullptr;
     h_p_C_ptr = nullptr;
     h_p_V0_ptr = nullptr;
-    h_p_material_type_ptr= nullptr;
-
+    h_p_material_type_ptr = nullptr;
 
     d_p_mass_ptr = nullptr;
     d_p_vel_ptr = nullptr;
@@ -91,22 +91,24 @@ class Engine {
     d_g_mass_ptr = nullptr;
     d_g_vel_ptr = nullptr;
 
-    if(_engineConfig.m_device==Device::GPU){
+    if (_engineConfig.m_device == Device::GPU) {
 #ifdef __CUDACC__
-        cudaError_t e = cudaGetDeviceCount(&_deviceCount);
-        e == cudaSuccess ? _deviceCount : -1;
+      cudaError_t e = cudaGetDeviceCount(&_deviceCount);
+      e == cudaSuccess ? _deviceCount : -1;
 #else
-        fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
-    _engineConfig.m_device = CPU;
+      fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
+  _engineConfig.m_device = CPU;
 #endif
-    mPotentialEnergy.reserve(1000);
-    mKineticEnergy.reserve(1000);
-    }
+      mParticlePotentialEnergy.reserve(1000);
+      mParticleKineticEnergy.reserve(1000);
+      mGridKineticEnergy.reserve(1000);
+      mGridPotentialEnergy.reserve(1000);
 
+    }
 
   };
 
-  ~Engine(){
+  ~Engine() {
     delete h_p_pos_ptr;
     delete h_p_vel_ptr;
     delete h_p_mass_ptr;
@@ -128,16 +130,15 @@ class Engine {
     cudaFree(d_p_project_ptr);
     cudaFree(d_g_mass_ptr);
     cudaFree(d_g_vel_ptr);
-  } ; //TODO: delete all ptr
+  }; //TODO: delete all ptr
 
 
   void integrate(Scalar dt);
   void integrateWithProfile(Scalar dt, Profiler &profiler);
 
-
   void reset(Particles &particle, EngineConfig engine_config);
   void setGravity(Vec3f gravity);
-  void setIsFirstStep(bool is_first) {_is_first_step=is_first;};
+  void setIsFirstStep(bool is_first) { _is_first_step = is_first; };
   inline bool isCudaAvailable() const { return _deviceCount > 0; };
   void setEngineConfig(EngineConfig engine_config);
   float *getGravityFloatPtr();
@@ -145,13 +146,15 @@ class Engine {
   void deleteAllParticle();
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const { return _currentFrame; }
-  Scalar * getParticlePosPtr(){return h_p_pos_ptr;}
+  Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
 
   EngineConfig getEngineConfig();
 
   std::vector<Particle> m_sceneParticles;
-  std::vector<Scalar> mPotentialEnergy;
-  std::vector<Scalar> mKineticEnergy;
+  std::vector<Scalar> mParticlePotentialEnergy;
+  std::vector<Scalar> mParticleKineticEnergy;
+  std::vector<Scalar> mGridPotentialEnergy;
+    std::vector<Scalar> mGridKineticEnergy;
 
  private:
 
@@ -191,8 +194,7 @@ class Engine {
   Scalar *h_p_J_ptr; //scalar
   Scalar *h_p_C_ptr; //3x3
   Scalar *h_p_V0_ptr;
-  mpm::MaterialType* h_p_material_type_ptr;
-
+  mpm::MaterialType *h_p_material_type_ptr;
 
   Scalar *d_p_mass_ptr; //scalar
   Scalar *d_p_vel_ptr; //vec3
@@ -201,9 +203,14 @@ class Engine {
   Scalar *d_p_J_ptr; //scalar
   Scalar *d_p_C_ptr; //3x3
   Scalar *d_p_V0_ptr;
-  mpm::MaterialType* d_p_material_type_ptr;
+  mpm::MaterialType *d_p_material_type_ptr;
   StressFunc *d_p_getStress_ptr;
   ProjectFunc *d_p_project_ptr;
+
+//  ParticleConstraintFunc particle_constraint_func;
+
+
+
 
   Scalar *d_g_mass_ptr;
   Scalar *d_g_vel_ptr;

@@ -37,6 +37,15 @@ void initEngine(mpm::EngineConfig config) {
       (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(5, 5, 0)); //TODO: rho, initvol
 
   engine->addParticles(particles);
+//  engine->setParticleConstraintFunc(
+//      []__device__(int inx, mpm::Scalar* d_pos, mpm::Scalar* d_vel){
+//        if (d_pos[inx * 3 + 2] >0.5) {
+//            d_pos[inx * 3] = 0.5;
+//            d_vel[inx * 3 + 2] = 0;
+//        }
+//      }
+//      );
+
 
 }
 void initGui() {

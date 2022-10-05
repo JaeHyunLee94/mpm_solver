@@ -111,5 +111,5 @@ __device__ void projectCorotatedJellyOnDevice(float9 &F, float9 &C,Scalar& J, Sc
 
 
 }
-
+#include "Engine.h"
 #endif //MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_
