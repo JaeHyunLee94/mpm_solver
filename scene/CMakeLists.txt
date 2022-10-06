@@ -64,3 +64,14 @@ set_target_properties(
 target_compile_options(jelly_armadilo PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
         --extended-lambda
         >)
+
+add_executable(jelly_constraint "jelly_constraint.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
+target_link_libraries(jelly_constraint PUBLIC renderer engine  imgui  glfw)
+target_include_directories(jelly_constraint PUBLIC  renderer engine  glfw )
+set_target_properties(
+        jelly_constraint
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)
+target_compile_options(jelly_constraint PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+        --extended-lambda
+        >)

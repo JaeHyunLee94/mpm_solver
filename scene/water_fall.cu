@@ -39,6 +39,7 @@ void initEngine(mpm::EngineConfig config) {
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
   engine->addParticles(particles);
+  engine->makeAosToSOA();
 
 }
 void reset(mpm::Engine *engine, mpm::EngineConfig config) {

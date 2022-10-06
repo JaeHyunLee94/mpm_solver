@@ -2,8 +2,8 @@
 // Created by test on 2022-09-28.
 //
 
-#ifndef MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_H_
-#define MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_H_
+#ifndef MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_CUH_
+#define MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_CUH_
 
 #include "nvfunctional"
 #include "../Types.h"
@@ -42,10 +42,10 @@ struct float9{
 
 using StressFunc = nvstd::function<void( float9&, Scalar&,float9&)>;
 using ProjectFunc= nvstd::function<void(float9& ,float9&,Scalar&, Scalar)> ;
-using ParticleConstraintFunc = nvstd::function<void(int , Scalar*,Scalar*)>;
+//using ParticleConstraintFunc = std::function<void(int , Scalar*,Scalar*)>;
 //using GridConstraintFunc = nvstd::function<void(int,int,int,Scalar*,Scalar*)>;
 //TODO: index operator overloading
 
 }
 
-#endif //MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_H_
+#endif //MPM_SOLVER_SRC_ENGINE_CUDA_CUDATYPES_CUH_

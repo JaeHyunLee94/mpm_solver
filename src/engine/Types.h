@@ -24,6 +24,9 @@ using Mat3d = Eigen::Matrix3d;
 using Mat2f = Eigen::Matrix2f;
 using Mat3f = Eigen::Matrix3f;
 
+using getStressFuncHost =  std::function< Mat3f(Mat3f&, Scalar&)>;
+using projectFuncHost = std::function< void(Mat3f& ,Scalar& ,Mat3f&  , Scalar )>;
+
 
 }
 

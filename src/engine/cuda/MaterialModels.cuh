@@ -4,7 +4,7 @@
 
 #ifndef MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_
 #define MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_
-#include "CudaTypes.h"
+#include "CudaTypes.cuh"
 #include "svd3.h"
 namespace mpm {
 

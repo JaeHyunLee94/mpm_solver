@@ -18,7 +18,7 @@
 #include "Entity.h"
 #include "Grid.h"
 #include "Profiler.h"
-#include "cuda/CudaTypes.h"
+#include "cuda/CudaTypes.cuh"
 
 namespace mpm {
 
@@ -90,6 +90,8 @@ class Engine {
     d_p_project_ptr = nullptr;
     d_g_mass_ptr = nullptr;
     d_g_vel_ptr = nullptr;
+//    _grid.h_g_mass_ptr= nullptr;
+//    _grid.h_g_vel_ptr= nullptr;
 
     if (_engineConfig.m_device == Device::GPU) {
 #ifdef __CUDACC__
@@ -135,6 +137,7 @@ class Engine {
 
   void integrate(Scalar dt);
   void integrateWithProfile(Scalar dt, Profiler &profiler);
+  void integrateWithCuda(Scalar dt);
 
   void reset(Particles &particle, EngineConfig engine_config);
   void setGravity(Vec3f gravity);
@@ -147,9 +150,12 @@ class Engine {
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const { return _currentFrame; }
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
-
+//  void setParticleConstraint(ParticleConstraintFunc constraint_func);
+//  void processParticleConstraint();
   EngineConfig getEngineConfig();
+  void makeAosToSOA();
 
+  //initial scene particle
   std::vector<Particle> m_sceneParticles;
   std::vector<Scalar> mParticlePotentialEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
@@ -165,8 +171,8 @@ class Engine {
   void g2p(Scalar dt);
 
   //CUDA relevant function
-  void integrateWithCuda(Scalar dt);
-  void makeAosToSOA();
+
+
   void transferDataToDevice();
   void transferDataFromDevice();
   void configureDeviceParticleType();
@@ -182,11 +188,9 @@ class Engine {
   int _deviceCount;
   unsigned long long _currentFrame;
   bool _is_cuda_available;
-//  Particle *d_particles_ptr;
-//  Vec3f *d_grid_vel_ptr;
-//  Scalar *d_grid_mass_ptr;
 
-//CUDA
+
+//host ptr
   Scalar *h_p_mass_ptr; //scalar
   Scalar *h_p_vel_ptr; //vec3
   Scalar *h_p_pos_ptr;// vec3
@@ -195,7 +199,13 @@ class Engine {
   Scalar *h_p_C_ptr; //3x3
   Scalar *h_p_V0_ptr;
   mpm::MaterialType *h_p_material_type_ptr;
+  getStressFuncHost *h_p_getStress_ptr;
+  projectFuncHost *h_p_project_ptr;
 
+
+
+
+  //device ptr
   Scalar *d_p_mass_ptr; //scalar
   Scalar *d_p_vel_ptr; //vec3
   Scalar *d_p_pos_ptr;// vec3
@@ -208,6 +218,7 @@ class Engine {
   ProjectFunc *d_p_project_ptr;
 
 //  ParticleConstraintFunc particle_constraint_func;
+
 
 
 

@@ -12,7 +12,7 @@
 #include <string>
 #include "../Types.h"
 #include "CudaUtils.cuh"
-#include "CudaTypes.h"
+#include "CudaTypes.cuh"
 #include "MaterialModels.cuh"
 
 namespace mpm {
@@ -76,7 +76,6 @@ __global__ void p2gCuda(
   Scalar V_0 = d_p_V0_ptr[idx];
   Scalar mass = d_p_mass_ptr[idx];
   Scalar J = d_p_J_ptr[idx];
-
 
   float3 Xp = particle_pos * inv_dx;
 
@@ -201,7 +200,6 @@ __global__ void updateGridCuda(Scalar *__restrict__ d_g_mass_ptr,
     }
   }
 
-
 }
 
 __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
@@ -283,18 +281,13 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
       }
     }
   }
-  d_p_project_func_ptr[idx](F,new_C,J,dt);
-
-
+  d_p_project_func_ptr[idx](F, new_C, J, dt);
 
   trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
   trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
   trove::store_warp_contiguous(particle_pos + dt * new_v, (float3 *) (d_p_pos_ptr + idx * 3));
   trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
   d_p_J_ptr[idx] = J;
-
-
-
 
 }
 
@@ -312,6 +305,7 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
 //
 //
 //}
+
 
 void mpm::Engine::integrateWithCuda(Scalar dt) {
 
@@ -342,7 +336,6 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
-
   updateGridCuda<<<grid_grid_size, grid_block_size>>>(d_g_mass_ptr,
                                                       d_g_vel_ptr,
                                                       make_float3(_gravity[0], _gravity[1], _gravity[2]),
@@ -372,6 +365,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
 //                                                                       particle_num);
 
   transferDataFromDevice();
+//  processParticleConstraint();
 
 }
 
@@ -387,8 +381,5 @@ void mpm::Engine::configureDeviceParticleType() {
                                                                        particle_num);
 
 }
-
-
-
 
 }

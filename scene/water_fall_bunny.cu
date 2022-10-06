@@ -41,6 +41,8 @@ void initEngine(mpm::EngineConfig config) {
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
   engine->addParticles(particles);
+  fmt::print("particle count: {}\n",engine->getParticleCount());
+  engine->makeAosToSOA();
 
 }
 void reset(mpm::Engine *engine_, mpm::EngineConfig config) {
@@ -106,7 +108,8 @@ void initGui() {
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
     // engine->integrateWithProfile(8e-4,*profiler);
-    engine->integrate(7e-4);
+//    engine->integrateWithCuda(7e-4);
+engine->integrate(1e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
