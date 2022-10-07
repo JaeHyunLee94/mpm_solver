@@ -4,7 +4,7 @@
 
 #ifndef MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_
 #define MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_
-#include "CudaTypes.h"
+#include "CudaTypes.cuh"
 #include "svd3.h"
 namespace mpm {
 
@@ -34,7 +34,7 @@ __device__ void getStressCorotatedJellyOnDevice(const float9 &F, Scalar &J, floa
   /*
    * TODO: Implement the weakly compressible model
    */
-  const Scalar E = 1000; //Young's modulus
+  const Scalar E = 300; //Young's modulus
   const Scalar nu = 0.2;  //# Poisson's ratio
   const Scalar mu_0 = E / (2 * (1 + nu));
   const Scalar lambda_0 = E * nu / ((1 + nu) * (1 - 2 * nu)); // # Lame parameters
@@ -111,5 +111,5 @@ __device__ void projectCorotatedJellyOnDevice(float9 &F, float9 &C,Scalar& J, Sc
 
 
 }
-
+#include "Engine.h"
 #endif //MPM_SOLVER_SRC_ENGINE_CUDA_MATERIALMODELS_CUH_

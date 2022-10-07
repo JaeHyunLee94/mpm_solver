@@ -52,7 +52,7 @@ public:
     using ParticlesDataMutable::iterator;
     using ParticlesData::const_iterator;
 
-    virtual void release();
+    void release() const;
 
     ParticlesSimple();
 

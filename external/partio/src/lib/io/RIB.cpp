@@ -23,7 +23,13 @@
 
 #include "../Partio.h"
 #include "../core/ParticleHeaders.h"
-#include "io.h"
+#include "ZIP.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cassert>
+#include <memory>
 
 namespace Partio
 {
@@ -32,7 +38,10 @@ using namespace std;
 
 bool writeRIB(const char* filename, const ParticlesData& p, const bool compressed,std::ostream* errorStream)
 {
-    unique_ptr<ostream> output(io::write(filename, compressed));
+    unique_ptr<ostream> output(
+        compressed ? Gzip_Out(filename, ios::out | ios::binary)
+        : new ofstream(filename, ios::out | ios::binary));
+
     ParticleAttribute dummy;
     bool foundP     = p.attributeInfo("position",  dummy) || p.attributeInfo("P",     dummy);
     bool foundP2    = p.attributeInfo("position2", dummy) || p.attributeInfo("P2",    dummy);

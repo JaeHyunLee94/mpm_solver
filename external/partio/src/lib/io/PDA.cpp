@@ -32,8 +32,15 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
+#include "../Partio.h"
 #include "../core/ParticleHeaders.h"
-#include "io.h"
+#include "ZIP.h"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cassert>
+#include <memory>
 
 namespace Partio
 {
@@ -44,7 +51,7 @@ using namespace std;
 
 ParticlesDataMutable* readPDA(const char* filename,const bool headersOnly,std::ostream* errorStream)
 {
-    unique_ptr<istream> input(io::unzip(filename));
+    unique_ptr<istream> input(Gzip_In(filename,ios::in|ios::binary));
     if(!*input){
         if(errorStream) *errorStream <<"Partio: Can't open particle data file: "<<filename<<endl;
         return 0;
@@ -136,7 +143,11 @@ ParticlesDataMutable* readPDA(const char* filename,const bool headersOnly,std::o
 
 bool writePDA(const char* filename,const ParticlesData& p,const bool compressed,std::ostream* errorStream)
 {
-    unique_ptr<ostream> output(io::write(filename, compressed));
+    unique_ptr<ostream> output(
+        compressed ? 
+        Gzip_Out(filename,ios::out|ios::binary)
+        :new ofstream(filename,ios::out|ios::binary));
+
     *output<<"ATTRIBUTES"<<endl;
 
     vector<ParticleAttribute> attrs;

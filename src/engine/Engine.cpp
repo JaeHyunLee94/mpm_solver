@@ -5,24 +5,17 @@
 #include "Engine.h"
 #include <omp.h>
 #include "cuda/CudaUtils.cuh"
-#include "cuda/CudaTypes.h"
+#include "cuda/CudaTypes.cuh"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "nvfunctional"
 
-
-
-
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
-    if(_engineConfig.m_device==Device::CPU) {
-        initGrid();
-        p2g(dt);
-        updateGrid(dt);
-        g2p(dt);
-    }else{
-        integrateWithCuda(dt);
-    }
+  initGrid();
+  p2g(dt);
+  updateGrid(dt);
+  g2p(dt);
 
   _currentFrame++;
 }
@@ -30,11 +23,44 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
 #define SQR(x) ((x)*(x))
 
 void mpm::Engine::p2g(Scalar dt) {
-  const Scalar _4_dt_invdx2 = 4.0f * dt * _grid.invdx() * _grid.invdx();
-#pragma omp parallel for schedule(dynamic)
+  const Scalar inv_dx = _grid.invdx();
+  const Scalar _4_dt_invdx2 = 4.0f * dt * inv_dx * inv_dx;
+#pragma omp parallel for
   for (int p = 0; p < m_sceneParticles.size(); ++p) {
-    auto &particle = m_sceneParticles[p];
-    Vec3f Xp = particle.m_pos * _grid.invdx();
+    //printf("particle index: %d\n", p);
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+
+    Mat3f F = Mat3f::Identity();
+    F(0, 0) = h_p_F_ptr[9 * p + 0];
+    F(1, 0) = h_p_F_ptr[9 * p + 1];
+    F(2, 0) = h_p_F_ptr[9 * p + 2];
+    F(0, 1) = h_p_F_ptr[9 * p + 3];
+    F(1, 1) = h_p_F_ptr[9 * p + 4];
+    F(2, 1) = h_p_F_ptr[9 * p + 5];
+    F(0, 2) = h_p_F_ptr[9 * p + 6];
+    F(1, 2) = h_p_F_ptr[9 * p + 7];
+    F(2, 2) = h_p_F_ptr[9 * p + 8];
+
+
+    Mat3f C = Mat3f::Zero();
+    C(0,0) = h_p_C_ptr[9 * p + 0];
+    C(1,0) = h_p_C_ptr[9 * p + 1];
+    C(2,0) = h_p_C_ptr[9 * p + 2];
+    C(0,1) = h_p_C_ptr[9 * p + 3];
+    C(1,1) = h_p_C_ptr[9 * p + 4];
+    C(2,1) = h_p_C_ptr[9 * p + 5];
+    C(0,2) = h_p_C_ptr[9 * p + 6];
+    C(1,2) = h_p_C_ptr[9 * p + 7];
+    C(2,2) = h_p_C_ptr[9 * p + 8];
+
+    Scalar Jp = h_p_J_ptr[p];
+    Scalar V0 = h_p_V0_ptr[p];
+    Scalar mass = h_p_mass_ptr[p];
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+
+//    auto &particle = m_sceneParticles[p];
+    Vec3f Xp = pos*inv_dx;
+//    float Xp[3] = {h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
@@ -47,12 +73,14 @@ void mpm::Engine::p2g(Scalar dt) {
 
 
     ////TODO: optimization candidate: multiplication of matrix can be expensive.
-    Mat3f cauchy_stress = particle.getStress(&particle);//TODO: Std::bind
 
+    Mat3f cauchy_stress = h_p_getStress_ptr[p](F, Jp);//particle.getStress(&particle);//TODO: Std::bind
+
+//Mat3f cauchy_stress = Mat3f::Identity();
 
     Mat3f stress = cauchy_stress
-        * (particle.m_Jp * particle.m_V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
-    Mat3f affine = stress + particle.m_mass * particle.m_Cp;
+        * (Jp * V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
+    Mat3f affine = stress + mass * C;
     //Scatter the quantity
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; ++j) {
@@ -66,8 +94,8 @@ void mpm::Engine::p2g(Scalar dt) {
           unsigned int idx =
               (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ()
                   + grid_index[2];
-          Scalar mass_frag = weight * particle.m_mass;
-          Vec3f momentum_frag = weight * (particle.m_mass * particle.m_vel + affine * dpos);
+          Scalar mass_frag = weight * mass;
+          Vec3f momentum_frag = weight * (mass * vel + affine * dpos);
 
           //TODO: optimization candidate: critical section?
 #pragma omp atomic
@@ -127,11 +155,49 @@ void mpm::Engine::updateGrid(Scalar dt) {
 }
 
 void mpm::Engine::g2p(Scalar dt) {
-  const Scalar _4_invdx2 = 4.0f * _grid.invdx() * _grid.invdx();
+  const Scalar inv_dx = _grid.invdx();
+  const Scalar _4_invdx2 = 4.0f * inv_dx * inv_dx;
 #pragma omp parallel for
   for (int p = 0; p < m_sceneParticles.size(); ++p) {
-    auto &particle = m_sceneParticles[p];
-    Vec3f Xp = particle.m_pos * _grid.invdx();
+
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+//    Mat3f F;
+//    F <<
+//      h_p_F_ptr[9 * p + 0], h_p_F_ptr[9 * p + 1], h_p_F_ptr[9 * p + 2],
+//        h_p_F_ptr[9 * p + 3], h_p_F_ptr[9 * p + 4], h_p_F_ptr[9 * p + 5],
+//        h_p_F_ptr[9 * p + 6], h_p_F_ptr[9 * p + 7], h_p_F_ptr[9 * p + 8];
+//    Mat3f C;
+//    C <<
+//      h_p_C_ptr[9 * p + 0], h_p_C_ptr[9 * p + 1], h_p_C_ptr[9 * p + 2],
+//        h_p_C_ptr[9 * p + 3], h_p_C_ptr[9 * p + 4], h_p_C_ptr[9 * p + 5],
+//        h_p_C_ptr[9 * p + 6], h_p_C_ptr[9 * p + 7], h_p_C_ptr[9 * p + 8];
+//    Scalar Jp = h_p_J_ptr[p];
+    Mat3f F = Mat3f::Identity();
+    F(0, 0) = h_p_F_ptr[9 * p + 0];
+    F(1, 0) = h_p_F_ptr[9 * p + 1];
+    F(2, 0) = h_p_F_ptr[9 * p + 2];
+    F(0, 1) = h_p_F_ptr[9 * p + 3];
+    F(1, 1) = h_p_F_ptr[9 * p + 4];
+    F(2, 1) = h_p_F_ptr[9 * p + 5];
+    F(0, 2) = h_p_F_ptr[9 * p + 6];
+    F(1, 2) = h_p_F_ptr[9 * p + 7];
+    F(2, 2) = h_p_F_ptr[9 * p + 8];
+
+    Mat3f C = Mat3f::Zero();
+    C(0,0) = h_p_C_ptr[9 * p + 0];
+    C(1,0) = h_p_C_ptr[9 * p + 1];
+    C(2,0) = h_p_C_ptr[9 * p + 2];
+    C(0,1) = h_p_C_ptr[9 * p + 3];
+    C(1,1) = h_p_C_ptr[9 * p + 4];
+    C(2,1) = h_p_C_ptr[9 * p + 5];
+    C(0,2) = h_p_C_ptr[9 * p + 6];
+    C(1,2) = h_p_C_ptr[9 * p + 7];
+    C(2,2) = h_p_C_ptr[9 * p + 8];
+
+    Scalar Jp = h_p_J_ptr[p];
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+
+    Vec3f Xp = pos * inv_dx;
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
@@ -164,12 +230,36 @@ void mpm::Engine::g2p(Scalar dt) {
       }
     }
 
-    particle.m_vel = new_v;
-    particle.m_Cp = new_C;
+    h_p_vel_ptr[3 * p + 0] = new_v[0];
+    h_p_vel_ptr[3 * p + 1] = new_v[1];
+    h_p_vel_ptr[3 * p + 2] = new_v[2];
+    h_p_C_ptr[9 * p + 0] = new_C(0, 0);
+    h_p_C_ptr[9 * p + 1] = new_C(1, 0);
+    h_p_C_ptr[9 * p + 2] = new_C(2, 0);
+    h_p_C_ptr[9 * p + 3] = new_C(0, 1);
+    h_p_C_ptr[9 * p + 4] = new_C(1, 1);
+    h_p_C_ptr[9 * p + 5] = new_C(2, 1);
+    h_p_C_ptr[9 * p + 6] = new_C(0, 2);
+    h_p_C_ptr[9 * p + 7] = new_C(1, 2);
+    h_p_C_ptr[9 * p + 8] = new_C(2, 2);
 
-    particle.m_pos += dt * particle.m_vel;
+    h_p_pos_ptr[3 * p + 0] += dt * new_v[0];
+    h_p_pos_ptr[3 * p + 1] += dt * new_v[1];
+    h_p_pos_ptr[3 * p + 2] += dt * new_v[2];
 
-    particle.project(&particle, dt);
+
+    h_p_project_ptr[p](F, Jp, C, dt);
+
+    h_p_F_ptr[9 * p + 0] = F(0, 0);
+    h_p_F_ptr[9 * p + 1] = F(1, 0);
+    h_p_F_ptr[9 * p + 2] = F(2, 0);
+    h_p_F_ptr[9 * p + 3] = F(0, 1);
+    h_p_F_ptr[9 * p + 4] = F(1, 1);
+    h_p_F_ptr[9 * p + 5] = F(2, 1);
+    h_p_F_ptr[9 * p + 6] = F(0, 2);
+    h_p_F_ptr[9 * p + 7] = F(1, 2);
+    h_p_F_ptr[9 * p + 8] = F(2, 2);
+    h_p_J_ptr[p] = Jp;
 
   }
 
@@ -189,7 +279,6 @@ void mpm::Engine::addParticles(Particles &particles) {
   for (int i = 0; i < particles.getParticleNum(); i++) {
     m_sceneParticles.push_back(particles.mParticleList[i]);
   }
-
 
   fmt::print("particle[tag:{}] added\n", particles.getTag());
 
@@ -218,6 +307,7 @@ void mpm::Engine::reset(Particles &particle, EngineConfig engine_config) {
   deleteAllParticle();
   setGravity(Vec3f(0, 0, 0));
   addParticles(particle);
+  setIsFirstStep(true);
 
 }
 void mpm::Engine::deleteAllParticle() {
@@ -229,31 +319,25 @@ void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
 }
 void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
-    if(_engineConfig.m_device==Device::CPU){
-        profiler.start("init");
-        initGrid();
-        profiler.endAndReport("init");
-        profiler.start("p2g");
-        p2g(dt);
-        profiler.endAndReport("p2g");
-        profiler.start("updateGrid");
-        updateGrid(dt);
-        profiler.endAndReport("updateGrid");
-        profiler.start("g2p");
-        g2p(dt);
-        profiler.endAndReport("g2p");
-        profiler.makeArray();
-    }else{
-        integrateWithCuda(dt);
-    }
-
+  profiler.start("init");
+  initGrid();
+  profiler.endAndReport("init");
+  profiler.start("p2g");
+  p2g(dt);
+  profiler.endAndReport("p2g");
+  profiler.start("updateGrid");
+  updateGrid(dt);
+  profiler.endAndReport("updateGrid");
+  profiler.start("g2p");
+  g2p(dt);
+  profiler.endAndReport("g2p");
+  profiler.makeArray();
 
 }
 
-
 void mpm::Engine::transferDataToDevice() {
-  static bool is_first = true;
-  if (is_first) {
+
+  if (_is_first_step) {
     makeAosToSOA();
     fmt::print("Cuda Allocating...\n");
 
@@ -265,14 +349,13 @@ void mpm::Engine::transferDataToDevice() {
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size()));
 
-
-
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_getStress_ptr, sizeof(StressFunc) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_project_ptr, sizeof(ProjectFunc) * m_sceneParticles.size()));
 
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_mass_ptr, sizeof(Scalar) *_grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
-    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_vel_ptr, 3*sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
-
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_mass_ptr,
+                              sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_g_vel_ptr,
+                              3 * sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_material_type_ptr, sizeof(mpm::MaterialType) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_material_type_ptr,
@@ -281,70 +364,78 @@ void mpm::Engine::transferDataToDevice() {
                                    cudaMemcpyHostToDevice));
     configureDeviceParticleType();
 
-    is_first = false;
+    _is_first_step = false;
   }
 
-
-
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_mass_ptr,
-                            h_p_mass_ptr,
-                            sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyHostToDevice));
+                                 h_p_mass_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_pos_ptr,
-                            h_p_pos_ptr,
-                            3 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyHostToDevice));
+                                 h_p_pos_ptr,
+                                 3 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_vel_ptr,
-                            h_p_vel_ptr,
-                            3 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyHostToDevice));
+                                 h_p_vel_ptr,
+                                 3 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_F_ptr,
-                            h_p_F_ptr,
-                            9 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_J_ptr, h_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyHostToDevice));
+                                 h_p_F_ptr,
+                                 9 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_J_ptr,
+                                 h_p_J_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_C_ptr,
-                            h_p_C_ptr,
-                            9 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr, h_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyHostToDevice));
-
-
+                                 h_p_C_ptr,
+                                 9 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr,
+                                 h_p_V0_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
 
   CUDA_ERR_CHECK(cudaMemsetAsync(d_g_mass_ptr,
-                 0,
-                            sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+                                 0,
+                                 sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
   CUDA_ERR_CHECK(cudaMemsetAsync(d_g_vel_ptr,
-                            0,
-                            3 * sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
+                                 0,
+                                 3 * sizeof(Scalar) * _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ()));
 
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 void mpm::Engine::transferDataFromDevice() {
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_mass_ptr,
-                            d_p_mass_ptr,
-                            sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyDeviceToHost));
+                                 d_p_mass_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
 
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_pos_ptr,
-                            d_p_pos_ptr,
-                            3 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyDeviceToHost));
+                                 d_p_pos_ptr,
+                                 3 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_vel_ptr,
-                            d_p_vel_ptr,
-                            3 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyDeviceToHost));
+                                 d_p_vel_ptr,
+                                 3 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_F_ptr,
-                            d_p_F_ptr,
-                            9 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyDeviceToHost));
-  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_J_ptr, d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyDeviceToHost));
+                                 d_p_F_ptr,
+                                 9 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_J_ptr,
+                                 d_p_J_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_C_ptr,
-                            d_p_C_ptr,
-                            9 * sizeof(Scalar) * m_sceneParticles.size(),
-                            cudaMemcpyDeviceToHost));
-  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr, d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size(), cudaMemcpyDeviceToHost));
+                                 d_p_C_ptr,
+                                 9 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr,
+                                 d_p_V0_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 void mpm::Engine::makeAosToSOA() {
@@ -357,7 +448,11 @@ void mpm::Engine::makeAosToSOA() {
   h_p_J_ptr = new Scalar[m_sceneParticles.size()];
   h_p_C_ptr = new Scalar[m_sceneParticles.size() * 9];
   h_p_V0_ptr = new Scalar[m_sceneParticles.size()];
+
   h_p_material_type_ptr = new mpm::MaterialType[m_sceneParticles.size()];
+  h_p_getStress_ptr = new mpm::getStressFuncHost[m_sceneParticles.size()];
+  h_p_project_ptr = new mpm::projectFuncHost[m_sceneParticles.size()];
+
 #pragma omp parallel for
   for (int i = 0; i < m_sceneParticles.size(); i++) {
     h_p_mass_ptr[i] = m_sceneParticles[i].m_mass;
@@ -389,10 +484,24 @@ void mpm::Engine::makeAosToSOA() {
     h_p_C_ptr[i * 9 + 8] = m_sceneParticles[i].m_Cp(2, 2);
 
     h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
+    h_p_getStress_ptr[i] = m_sceneParticles[i].getStress;
+    h_p_project_ptr[i] = m_sceneParticles[i].project;
 
   }
 
 }
+//void mpm::Engine::setParticleConstraint(ParticleConstraintFunc constraint_func) {
+//  this->particle_constraint_func= constraint_func;
+//
+//}
+//void mpm::Engine::processParticleConstraint() {
+//
+//#pragma omp parallel for
+//  for (int i = 0; i < m_sceneParticles.size(); i++) {
+//   particle_constraint_func(i,h_p_pos_ptr,h_p_vel_ptr);
+//  }
+//
+//}
 
 
 

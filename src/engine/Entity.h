@@ -13,7 +13,7 @@ class Entity {
 
  public:
 
-  void loadFromFile(const std::string &filename, unsigned int particle_num, bool usePoisson = false);
+  void loadFromFile(const char *filename);
   void loadCube(Vec3f center, Scalar len, unsigned int particle_num, bool usePoisson = false);
   void loadSphere(Vec3f center, Scalar radius,unsigned int particle_num, bool usePoisson = false);
   std::vector<Vec3f>& getPositionVector();

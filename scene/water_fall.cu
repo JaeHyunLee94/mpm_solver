@@ -39,6 +39,7 @@ void initEngine(mpm::EngineConfig config) {
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
   engine->addParticles(particles);
+  engine->makeAosToSOA();
 
 }
 void reset(mpm::Engine *engine, mpm::EngineConfig config) {
@@ -130,6 +131,8 @@ int main() {
   run();
 
 
+  matplotlibcpp::plot({1,2,3,4});
+  matplotlibcpp::show();
   fmt::print("reach end of main\n");
   delete renderer;
   delete handler;

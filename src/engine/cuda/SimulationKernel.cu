@@ -12,7 +12,7 @@
 #include <string>
 #include "../Types.h"
 #include "CudaUtils.cuh"
-#include "CudaTypes.h"
+#include "CudaTypes.cuh"
 #include "MaterialModels.cuh"
 
 namespace mpm {
@@ -76,7 +76,6 @@ __global__ void p2gCuda(
   Scalar V_0 = d_p_V0_ptr[idx];
   Scalar mass = d_p_mass_ptr[idx];
   Scalar J = d_p_J_ptr[idx];
-
 
   float3 Xp = particle_pos * inv_dx;
 
@@ -174,17 +173,29 @@ __global__ void updateGridCuda(Scalar *__restrict__ d_g_mass_ptr,
     unsigned int zi = grid_idx - xi * grid_y_dim * grid_z_dim - yi * grid_z_dim;
     if (xi < bound && g_vel.x < 0) {
       d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//        d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (xi > grid_x_dim - bound && g_vel.x > 0) {
       d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
     if (yi < bound && g_vel.y < 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
       d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (yi > grid_y_dim - bound && g_vel.y > 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
       d_g_vel_ptr[3 * grid_idx + 1] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
     if (zi < bound && g_vel.z < 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
       d_g_vel_ptr[3 * grid_idx + 2] = 0;
     } else if (zi > grid_z_dim - bound && g_vel.z > 0) {
+//      d_g_vel_ptr[3 * grid_idx] = 0;
+//      d_g_vel_ptr[3 * grid_idx + 1] = 0;
       d_g_vel_ptr[3 * grid_idx + 2] = 0;
     }
   }
@@ -270,9 +281,7 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
       }
     }
   }
-  d_p_project_func_ptr[idx](F,new_C,J,dt);
-
-
+  d_p_project_func_ptr[idx](F, new_C, J, dt);
 
   trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
   trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
@@ -280,10 +289,23 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
   trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
   d_p_J_ptr[idx] = J;
 
-
-
-
 }
+
+//__global__ void processParticleConstraint(
+//                                          Scalar *__restrict__ d_p_pos_ptr,
+//                                          Scalar *__restrict__ d_p_vel_ptr,
+//                                          ParticleConstraintFunc  particle_constraint_func,
+//                                          const unsigned int particle_num
+//) {
+//  const
+//  unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+//  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+//  particle_constraint_func(idx,d_p_pos_ptr,d_p_vel_ptr);
+//
+//
+//
+//}
+
 
 void mpm::Engine::integrateWithCuda(Scalar dt) {
 
@@ -337,7 +359,13 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
+//  processParticleConstraint <<<particle_grid_size, particle_block_size>>>(d_p_pos_ptr,
+//                                                                       d_p_vel_ptr,
+//                                                                       particle_constraint_func,
+//                                                                       particle_num);
+
   transferDataFromDevice();
+//  processParticleConstraint();
 
 }
 
@@ -346,7 +374,7 @@ void mpm::Engine::configureDeviceParticleType() {
   const unsigned int particle_num = m_sceneParticles.size();
   int particle_block_size = 64;
   int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
-
+  CUDA_ERR_CHECK(cudaDeviceSynchronize());
   setParticleWiseFunction<<<particle_grid_size, particle_block_size>>>(d_p_material_type_ptr,
                                                                        d_p_getStress_ptr,
                                                                        d_p_project_ptr,
