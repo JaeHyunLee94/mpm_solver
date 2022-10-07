@@ -18,7 +18,7 @@ add_subdirectory(glfw)
 #fmt
 add_subdirectory(fmt)
 add_subdirectory(imgui)
-add_subdirectory(matplotlib-cpp)
+#add_subdirectory(matplotlib-cpp)
 
 add_subdirectory(zlib)
 add_subdirectory(partio)

@@ -4,7 +4,7 @@
 
 #ifndef MPM_SOLVER_ENGINE_H
 #define MPM_SOLVER_ENGINE_H
-#include <matplotlibcpp.h>
+//#include <matplotlibcpp.h>
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"

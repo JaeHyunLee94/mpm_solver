@@ -108,8 +108,8 @@ void initGui() {
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
     // engine->integrateWithProfile(8e-4,*profiler);
-//    engine->integrateWithCuda(7e-4);
-engine->integrate(1e-4);
+    //engine->integrateWithCuda(7e-4);
+engine->integrate(7e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
