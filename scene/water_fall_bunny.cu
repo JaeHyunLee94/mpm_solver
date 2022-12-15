@@ -46,20 +46,7 @@ void initEngine(mpm::EngineConfig config) {
 
 }
 void reset(mpm::Engine *engine_, mpm::EngineConfig config) {
-  //delete engine;
-//  delete engine_;
-//  engine_ = new mpm::Engine(config);
-//  engine_->setGravity(mpm::Vec3f(0, 0, -9.8));
-//  mpm::Entity entity;
-//  unsigned int res = engine->getEngineConfig().m_gridResolution[0];
-//  float grid_dx = engine_->getEngineConfig().m_gridCellSize;
-////  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
-//  entity.loadFromFile("../../assets/bunny_1.bgeo");
-//
-//  mpm::Particles
-//      particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
-//
-//  engine_->addParticles(particles);
+
 
 }
 
@@ -108,8 +95,8 @@ void initGui() {
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
     // engine->integrateWithProfile(8e-4,*profiler);
-    //engine->integrateWithCuda(7e-4);
-engine->integrate(7e-4);
+    engine->integrateWithCuda(7e-4);
+//engine->integrate(7e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
