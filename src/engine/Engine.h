@@ -150,8 +150,8 @@ class Engine {
   unsigned int getParticleCount() const;
   inline unsigned long long getCurrentFrame() const { return _currentFrame; }
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
-//  void setParticleConstraint(ParticleConstraintFunc constraint_func);
-//  void processParticleConstraint();
+  void calculateParticleKineticEnergy();
+
   EngineConfig getEngineConfig();
   void makeAosToSOA();
 

@@ -291,26 +291,13 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
 
 }
 
-//__global__ void processParticleConstraint(
-//                                          Scalar *__restrict__ d_p_pos_ptr,
-//                                          Scalar *__restrict__ d_p_vel_ptr,
-//                                          ParticleConstraintFunc  particle_constraint_func,
-//                                          const unsigned int particle_num
-//) {
-//  const
-//  unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-//  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
-//  particle_constraint_func(idx,d_p_pos_ptr,d_p_vel_ptr);
-//
-//
-//
-//}
 
 
 void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   const unsigned int particle_num = m_sceneParticles.size();
   const unsigned int grid_num = _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ();
+  calculateParticleKineticEnergy();
   transferDataToDevice();
 
   int particle_block_size = 64;
@@ -318,6 +305,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   int grid_block_size = 64;
   int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
+
 
   p2gCuda<<<particle_grid_size, particle_block_size>>>(d_p_mass_ptr,
                                                        d_p_vel_ptr,

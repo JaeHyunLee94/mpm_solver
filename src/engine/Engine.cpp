@@ -501,18 +501,25 @@ void mpm::Engine::makeAosToSOA() {
     }
 
 }
-//void mpm::Engine::setParticleConstraint(ParticleConstraintFunc constraint_func) {
-//  this->particle_constraint_func= constraint_func;
-//
-//}
-//void mpm::Engine::processParticleConstraint() {
-//
+
+void mpm::Engine::calculateParticleKineticEnergy() {
+    Scalar kineticEnergy = 0.0;
+
 //#pragma omp parallel for
-//  for (int i = 0; i < m_sceneParticles.size(); i++) {
-//   particle_constraint_func(i,h_p_pos_ptr,h_p_vel_ptr);
-//  }
-//
-//}
+    for(int i = 0; i <m_sceneParticles.size();i++) {
+        Scalar mass =  h_p_mass_ptr[i];
+        //fmt::print("mass: {}\n", mass);
+        Scalar speed_sqr = h_p_vel_ptr[i * 3] * h_p_vel_ptr[i * 3] +
+                       h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
+                       h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
+        //fmt::print("speed_sqr: {}\n", speed_sqr);
+//#pragma omp atomic
+        kineticEnergy+= 0.5f *  mass* speed_sqr;
+    }
+    fmt::print("kinetic energy: {}\n", kineticEnergy);
+    mParticleKineticEnergy.push_back(kineticEnergy);
+
+}
 
 
 
