@@ -2,7 +2,7 @@
 // Created by test on 2022-09-27.
 //
 //#include "svd3.h"
-#include <trove/aos.h>
+//#include <trove/aos.h>
 #include "../Engine.h"
 #include "svd3.h"
 #include "helper_math.h"
@@ -29,7 +29,8 @@ __global__ void setParticleWiseFunction(mpm::MaterialType *d_material_type_ptr,
                                         ProjectFunc *d_project_func_ptr,
                                         const unsigned int particle_num) {
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
-  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+  //if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+  if (idx >= particle_num) return;
 
 //  d_material_type_ptr[idx] = mpm::MaterialType::WeaklyCompressibleWater;
 
@@ -63,16 +64,40 @@ __global__ void p2gCuda(
 ) {
 
   unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+  //if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+  if (idx >= particle_num) return;
   const Scalar inv_dx = 1.0f / dx;
 
   const Scalar _4_dt_invdx2 = 4.0f * dt * inv_dx * inv_dx;
+//  float3 g_vel = make_float3(d_g_vel_ptr[3 * grid_1d_index],
+//                             d_g_vel_ptr[3 * grid_1d_index + 1],
+//                             d_g_vel_ptr[3 * grid_1d_index + 2]);
+  float3 particle_pos = make_float3(d_p_pos_ptr[idx * 3], d_p_pos_ptr[idx * 3 + 1], d_p_pos_ptr[idx * 3 + 2]);
+  float3 vel = make_float3(d_p_vel_ptr[idx * 3], d_p_vel_ptr[idx * 3 + 1], d_p_vel_ptr[idx * 3 + 2]);
 
-  //float3 particle_pos = make_float3(d_p_pos_ptr[idx * 3], d_p_pos_ptr[idx * 3 + 1], d_p_pos_ptr[idx * 3 + 2]);
-  float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
-  float3 vel = trove::load_warp_contiguous((float3 *) (d_p_vel_ptr + idx * 3));
-  float9 Cp = trove::load_warp_contiguous((float9 *) (d_p_C_ptr + idx * 9));
-  float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+  //float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
+  //float3 vel = trove::load_warp_contiguous((float3 *) (d_p_vel_ptr + idx * 3));
+  //float9 Cp=  trove::load_warp_contiguous((float9 *) (d_p_C_ptr + idx * 9));
+  //float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+  float9 Cp = {d_p_C_ptr[9 * idx],
+               d_p_C_ptr[9 * idx + 1],
+               d_p_C_ptr[9 * idx + 2],
+               d_p_C_ptr[9 * idx + 3],
+               d_p_C_ptr[9 * idx + 4],
+               d_p_C_ptr[9 * idx + 5],
+               d_p_C_ptr[9 * idx + 6],
+               d_p_C_ptr[9 * idx + 7],
+               d_p_C_ptr[9 * idx + 8]};
+  float9 F = {d_p_F_ptr[9 * idx],
+              d_p_F_ptr[9 * idx + 1],
+              d_p_F_ptr[9 * idx + 2],
+              d_p_F_ptr[9 * idx + 3],
+              d_p_F_ptr[9 * idx + 4],
+              d_p_F_ptr[9 * idx + 5],
+              d_p_F_ptr[9 * idx + 6],
+              d_p_F_ptr[9 * idx + 7],
+              d_p_F_ptr[9 * idx + 8]};
+
   Scalar V_0 = d_p_V0_ptr[idx];
   Scalar mass = d_p_mass_ptr[idx];
   Scalar J = d_p_J_ptr[idx];
@@ -220,14 +245,24 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
                         const unsigned int grid_z) {
   const
   unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
-
+  //if (idx >= (particle_num + warpSize - 1) / warpSize * warpSize) return;
+  if (idx >= particle_num) return;
   const Scalar inv_dx = 1.0f / dx;
 
   const Scalar _4_invdx2 = 4.0f * inv_dx * inv_dx;
 
-  float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
-  float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+//  float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
+//  float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
+  float3 particle_pos = make_float3(d_p_pos_ptr[idx * 3], d_p_pos_ptr[idx * 3 + 1], d_p_pos_ptr[idx * 3 + 2]);
+  float9 F = {d_p_F_ptr[9 * idx],
+              d_p_F_ptr[9 * idx + 1],
+              d_p_F_ptr[9 * idx + 2],
+              d_p_F_ptr[9 * idx + 3],
+              d_p_F_ptr[9 * idx + 4],
+              d_p_F_ptr[9 * idx + 5],
+              d_p_F_ptr[9 * idx + 6],
+              d_p_F_ptr[9 * idx + 7],
+              d_p_F_ptr[9 * idx + 8]};
   Scalar J = d_p_J_ptr[idx];
 
   float3 Xp = particle_pos * inv_dx;
@@ -243,7 +278,7 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
                  0.5f * make_float3(SQR(fx.x - 0.5f), SQR(fx.y - 0.5f), SQR(fx.z - 0.5f))};
 
   float3 new_v = make_float3(0, 0, 0);
-  float9 new_C = {{0, 0, 0, 0, 0, 0, 0, 0, 0}};
+  float9 new_C = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   //Scatter the quantity
 
@@ -283,28 +318,53 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
   }
   d_p_project_func_ptr[idx](F, new_C, J, dt);
 
-  trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
-  trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
-  trove::store_warp_contiguous(particle_pos + dt * new_v, (float3 *) (d_p_pos_ptr + idx * 3));
-  trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
+  d_p_vel_ptr[idx * 3] = new_v.x;
+  d_p_vel_ptr[idx * 3 + 1] = new_v.y;
+  d_p_vel_ptr[idx * 3 + 2] = new_v.z;
+
+  d_p_F_ptr[idx * 9] = F[0];
+  d_p_F_ptr[idx * 9 + 1] = F[1];
+  d_p_F_ptr[idx * 9 + 2] = F[2];
+  d_p_F_ptr[idx * 9 + 3] = F[3];
+  d_p_F_ptr[idx * 9 + 4] = F[4];
+  d_p_F_ptr[idx * 9 + 5] = F[5];
+  d_p_F_ptr[idx * 9 + 6] = F[6];
+  d_p_F_ptr[idx * 9 + 7] = F[7];
+  d_p_F_ptr[idx * 9 + 8] = F[8];
+
+  d_p_C_ptr[idx * 9] = new_C[0];
+  d_p_C_ptr[idx * 9 + 1] = new_C[1];
+  d_p_C_ptr[idx * 9 + 2] = new_C[2];
+  d_p_C_ptr[idx * 9 + 3] = new_C[3];
+  d_p_C_ptr[idx * 9 + 4] = new_C[4];
+  d_p_C_ptr[idx * 9 + 5] = new_C[5];
+  d_p_C_ptr[idx * 9 + 6] = new_C[6];
+  d_p_C_ptr[idx * 9 + 7] = new_C[7];
+  d_p_C_ptr[idx * 9 + 8] = new_C[8];
+
+  float3 new_pos = particle_pos + dt * new_v;
+  d_p_pos_ptr[idx * 3] = new_pos.x;
+  d_p_pos_ptr[idx * 3 + 1] = new_pos.y;
+  d_p_pos_ptr[idx * 3 + 2] = new_pos.z;
+
+//  trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
+//  trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
+//  trove::store_warp_contiguous(particle_pos + dt * new_v, (float3 *) (d_p_pos_ptr + idx * 3));
+//  trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
   d_p_J_ptr[idx] = J;
 
 }
-
-
 
 void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   const unsigned int particle_num = m_sceneParticles.size();
   const unsigned int grid_num = _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ();
 
+  unsigned int particle_block_size = 64;
+  unsigned int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
 
-
-  int particle_block_size = 64;
-  int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
-
-  int grid_block_size = 64;
-  int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
+  unsigned int grid_block_size = 64;
+  unsigned int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
 
   transferDataToDevice();
   calculateParticleKineticEnergy();
@@ -348,10 +408,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
-
-
   transferDataFromDevice();
-
 
 }
 
@@ -359,7 +416,7 @@ void mpm::Engine::configureDeviceParticleType() {
   fmt::print("setting Device ParticleWise function\n");
   const unsigned int particle_num = m_sceneParticles.size();
   int particle_block_size = 64;
-  int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
+  unsigned int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
   setParticleWiseFunction<<<particle_grid_size, particle_block_size>>>(d_p_material_type_ptr,
                                                                        d_p_getStress_ptr,
