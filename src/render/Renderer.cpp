@@ -34,7 +34,7 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
   m_shader->setUniform("Sa", m_light->getAmbColor());
 
   debug_glCheckError("shader light property error");
-
+  m_shader->setUniform("isUseRainBowMap",m_is_use_rainbow_map);
   m_shader->setUniform("Kd",
                        glm::vec3(m_default_particle_color[0],
                                  m_default_particle_color[1],
@@ -42,7 +42,7 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
   m_shader->setUniform("Ka", glm::vec3(0., 0., 0.0));
   m_shader->setUniform("Ks", glm::vec3(0.1, 0.1, 0.1));
   m_shader->setUniform("Ke", glm::vec3(0, 0, 0));
-  m_shader->setUniform("sh", 0.01);
+  m_shader->setUniform("sh", 0.01f);
 
   m_shader->setUniform("particle_scale", m_particle_scale);
   m_shader->setUniform("modelMat", glm::mat4(1.0f));
@@ -59,37 +59,35 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
                         (void *) (m_sphere_mesh.getVertexCount() * sizeof(glm::vec3)));
   glEnableVertexAttribArray(2);
 
-  if(engine.isCudaAvailable()){
-    glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
-    glBufferData(GL_ARRAY_BUFFER,
-                 3*engine.getParticleCount() * sizeof(float),
-                 engine.getParticlePosPtr(),
-                 GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
 
+  //particle attribute
+  glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
+  glBufferData(GL_ARRAY_BUFFER,
+               4 * engine.getParticleCount() * sizeof(float),
+               nullptr,
+               GL_DYNAMIC_DRAW);
 
+  glBufferSubData(GL_ARRAY_BUFFER, 0, 3 * engine.getParticleCount() * sizeof(float), engine.getParticlePosPtr());
+  glBufferSubData(GL_ARRAY_BUFFER,
+                  3 * engine.getParticleCount() * sizeof(float),
+                  engine.getParticleCount() * sizeof(float),
+                  engine.mCurrentParticleColorWeight.data());
 
+  glEnableVertexAttribArray(2);
+  glVertexAttribDivisor(2, 1);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
 
-  }else{
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_engine_vbo_id);
-    glBufferData(GL_ARRAY_BUFFER,
-                 3*engine.getParticleCount() * sizeof(float),
-                 engine.getParticlePosPtr(),
-                 GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-
-    //Instance drawing
-
-  }
+  glEnableVertexAttribArray(3);
+  glVertexAttribDivisor(3, 1);
+  glVertexAttribPointer(3,
+                        1,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        sizeof(float),
+                        (void *) (3 * engine.getParticleCount() * sizeof(float)));
 
   glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
                           nullptr, engine.getParticleCount());
-
 
   gui.render();
 

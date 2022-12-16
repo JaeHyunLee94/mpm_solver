@@ -157,3 +157,7 @@ void Shader::setUniform(const char *t_name, float t_f) {
     GLint loc= glGetUniformLocation(m_program_id,t_name);
     glUniform1f(loc,t_f);
 }
+void Shader::setUniform(const char *t_name, bool t_b) {
+  GLint loc= glGetUniformLocation(m_program_id,t_name);
+  glUniform1i(loc,t_b);
+}

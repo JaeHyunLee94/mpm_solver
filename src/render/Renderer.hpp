@@ -42,7 +42,7 @@ class Renderer {
 
     Builder &shader(const char *vt_shader_path, const char *fg_shader_path);
 
-    Builder &init(std::string window_name,int width=1280,int height=1280);
+    Builder &init(std::string window_name, int width = 1280, int height = 1280);
 
     Renderer *build();
 
@@ -59,7 +59,6 @@ class Renderer {
     int m_builder_height;
 
   };
-
 
   ~Renderer() {
 
@@ -78,10 +77,11 @@ class Renderer {
   Shader &getShader();
 
   Light &getLight();
-  inline bool windowShouldClose(){return glfwWindowShouldClose(m_window);};
+  inline bool windowShouldClose() { return glfwWindowShouldClose(m_window); };
 
-  float m_background_color[4]{158./256, 289./256, 230./256, 1.00f};
-  float m_default_particle_color[4]{179./256, 104./256, 225./256, 1.0};
+  float m_background_color[4]{158. / 256, 289. / 256, 230. / 256, 1.00f};
+  float m_default_particle_color[4]{179. / 256, 104. / 256, 225. / 256, 1.0};
+  bool m_is_use_rainbow_map =false;
   float m_particle_scale = 0.1;
 //  bool m_is_draw_wireframe{false};
 
@@ -89,7 +89,12 @@ class Renderer {
 
 //    void render(mpm::Engine &engine);
   void renderWithGUI(mpm::Engine &engine, GUIwrapper &gui);
-  void setDefaultParticleColor(float r, float g, float b, float a=1.0f){m_default_particle_color[0]=r;m_default_particle_color[1]=g;m_default_particle_color[2]=b;m_default_particle_color[3]=a;};
+  void setDefaultParticleColor(float r, float g, float b, float a = 1.0f) {
+    m_default_particle_color[0] = r;
+    m_default_particle_color[1] = g;
+    m_default_particle_color[2] = b;
+    m_default_particle_color[3] = a;
+  };
   void terminate();
 
 
@@ -106,12 +111,12 @@ class Renderer {
 
   explicit Renderer(const Builder &builder)
       : m_window(builder.m_builder_window), m_camera(builder.m_builder_camera), m_light(builder.m_builder_light),
-        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(0.1,5,10),
-        m_window_width(builder.m_builder_width),m_window_height(builder.m_builder_height) {
-      debug_glCheckError("before genbuffer");
+        m_shader(builder.m_builder_shader), m_vao_id(builder.m_builder_vao_id), m_sphere_mesh(0.1, 5, 10),
+        m_window_width(builder.m_builder_width), m_window_height(builder.m_builder_height) {
+    debug_glCheckError("before genbuffer");
 
-        glGenBuffers(1, &m_engine_vbo_id);
-      debug_glCheckError("after genbuffer");
+    glGenBuffers(1, &m_engine_vbo_id);
+    debug_glCheckError("after genbuffer");
   };
 
   /*
@@ -131,8 +136,9 @@ class Renderer {
   GLuint m_vao_id;
   GLuint m_engine_vbo_id;
   int m_window_width;
-    int m_window_height;
-    unsigned long long m_current_frame=0;
+  int m_window_height;
+  unsigned long long m_current_frame = 0;
+
 
 };
 

@@ -66,6 +66,7 @@ void initGui() {
       .startGroup("Render Setting")
       .addWidgetText("Color setting")
       .addWidgetColorEdit3("BackGround Color", renderer->m_background_color)
+      .addWidgetCheckBox("Use rainbow map", &renderer->m_is_use_rainbow_map)
       .addWidgetColorEdit3("Particle Color", renderer->m_default_particle_color)
       .addWidgetSliderFloat("Particle Size", &renderer->m_particle_scale, 0.01f, 1.f)
       .addWidgetText("Camera Sensitivity")

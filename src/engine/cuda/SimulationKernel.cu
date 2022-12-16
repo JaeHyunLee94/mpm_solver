@@ -367,7 +367,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   unsigned int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
 
   transferDataToDevice();
-  calculateParticleKineticEnergy();
+
   p2gCuda<<<particle_grid_size, particle_block_size>>>(d_p_mass_ptr,
                                                        d_p_vel_ptr,
                                                        d_p_pos_ptr,
@@ -409,6 +409,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimZ());
 
   transferDataFromDevice();
+  calculateParticleKineticEnergy();
 
 }
 
