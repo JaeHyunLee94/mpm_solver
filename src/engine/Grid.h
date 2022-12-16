@@ -15,6 +15,7 @@ class Grid {
       : _x_res(x_res), _y_res(y_res), _z_res(z_res), _dx(dx),_inv_dx(1/dx) {
     m_mass.resize(x_res * y_res * z_res);
     m_vel.resize(x_res * y_res * z_res);
+
   };
 
   inline Scalar dx() const { return _dx; };

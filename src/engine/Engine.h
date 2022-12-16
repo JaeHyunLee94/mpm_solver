@@ -53,7 +53,6 @@ struct EngineConfig {
 
 };
 
-
 class Engine {
 
  public:
@@ -160,7 +159,7 @@ class Engine {
   std::vector<Scalar> mParticlePotentialEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
   std::vector<Scalar> mGridPotentialEnergy;
-    std::vector<Scalar> mGridKineticEnergy;
+  std::vector<Scalar> mGridKineticEnergy;
 
  private:
 
@@ -177,8 +176,6 @@ class Engine {
   void transferDataFromDevice();
   void configureDeviceParticleType();
 
-
-
   EngineConfig _engineConfig;
   Vec3f _gravity{0, 0, 0};
   Grid _grid;
@@ -188,7 +185,6 @@ class Engine {
   int _deviceCount;
   unsigned long long _currentFrame;
   bool _is_cuda_available;
-
 
 //host ptr
   Scalar *h_p_mass_ptr; //scalar
@@ -201,9 +197,6 @@ class Engine {
   mpm::MaterialType *h_p_material_type_ptr;
   getStressFuncHost *h_p_getStress_ptr;
   projectFuncHost *h_p_project_ptr;
-
-
-
 
   //device ptr
   Scalar *d_p_mass_ptr; //scalar

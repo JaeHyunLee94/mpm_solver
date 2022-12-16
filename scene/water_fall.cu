@@ -1,11 +1,7 @@
-
-
-
 #include <Renderer.hpp>
 #include <Engine.h>
 #include <Profiler.h>
 #include <iostream>
-
 
 Renderer *renderer = nullptr;
 InputHandler *handler = nullptr;
@@ -34,7 +30,7 @@ void initEngine(mpm::EngineConfig config) {
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
+  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4 * 32) * 32);
   mpm::Particles
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol
 
@@ -64,11 +60,10 @@ void initGui() {
       .addWidgetText("Application average %.3f ms/frame (%.1f FPS)",
                      gui->m_average_time, gui->m_frame_rate)
 
-
-        .startPlot("Integration profile")
-        .addPieChart(profiler->getLabelsPtr(), profiler->getValuesPtr(), profiler->getCount(), 0.5, 0.5, 0.4)
-        .endPlot()
-        .addWidgetText("P2G: %.3f ms",(double)profiler->getContainer()["p2g"])
+      .startPlot("Integration profile")
+      .addPieChart(profiler->getLabelsPtr(), profiler->getValuesPtr(), profiler->getCount(), 0.5, 0.5, 0.4)
+      .endPlot()
+      .addWidgetText("P2G: %.3f ms", (double) profiler->getContainer()["p2g"])
       .endGroup()
       .startGroup("Render Setting")
       .addWidgetText("Color setting")
@@ -97,18 +92,17 @@ void initGui() {
       .build();
 }
 
-
 void run() {
   while (!renderer->windowShouldClose()) { // hide glfw
     // engine->integrateWithProfile(8e-4,*profiler);
-engine->integrate(8e-4);
+    engine->integrate(8e-4);
     renderer->renderWithGUI(*engine, *gui);
     handler->handleInput();
 
   }
 }
-void initProfiler(){
-  profiler=new Profiler();
+void initProfiler() {
+  profiler = new Profiler();
 }
 
 int main() {
@@ -130,9 +124,9 @@ int main() {
 
   run();
 
-
-  matplotlibcpp::plot({1,2,3,4});
-  matplotlibcpp::show();
+//
+//  matplotlibcpp::plot({1,2,3,4});
+//  matplotlibcpp::show();
   fmt::print("reach end of main\n");
   delete renderer;
   delete handler;

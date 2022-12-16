@@ -297,8 +297,8 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
 
   const unsigned int particle_num = m_sceneParticles.size();
   const unsigned int grid_num = _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ();
-  calculateParticleKineticEnergy();
-  transferDataToDevice();
+
+
 
   int particle_block_size = 64;
   int particle_grid_size = (particle_num + particle_block_size - 1) / particle_block_size;
@@ -306,7 +306,8 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   int grid_block_size = 64;
   int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
 
-
+  transferDataToDevice();
+  calculateParticleKineticEnergy();
   p2gCuda<<<particle_grid_size, particle_block_size>>>(d_p_mass_ptr,
                                                        d_p_vel_ptr,
                                                        d_p_pos_ptr,
@@ -347,13 +348,10 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
-//  processParticleConstraint <<<particle_grid_size, particle_block_size>>>(d_p_pos_ptr,
-//                                                                       d_p_vel_ptr,
-//                                                                       particle_constraint_func,
-//                                                                       particle_num);
+
 
   transferDataFromDevice();
-//  processParticleConstraint();
+
 
 }
 
