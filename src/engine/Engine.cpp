@@ -9,6 +9,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "nvfunctional"
+#include <algorithm>
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
@@ -506,19 +507,29 @@ void mpm::Engine::calculateParticleKineticEnergy() {
   Scalar kineticEnergy = 0.0;
   Scalar mass = h_p_mass_ptr[0];
 
+  mCurrentParticleColorWeight.resize(m_sceneParticles.size());
+#pragma omp parallel for reduction(+ : kineticEnergy)
   for (int i = 0; i < m_sceneParticles.size(); ++i) {
-    //Scalar mass = h_p_mass_ptr[i];
-    //fmt::print("mass: {}\n", mass);
+
     Scalar speed_sqr = h_p_vel_ptr[i * 3] * h_p_vel_ptr[i * 3] +
         h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
         h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
-    //fmt::print("speed_sqr: {}\n", speed_sqr);
-
+    mCurrentParticleColorWeight[i] = speed_sqr;
+#pragma omp atomic
     kineticEnergy += speed_sqr;
   }
-  //std::cout << "Kinetic Energy: " << kineticEnergy << std::endl;
-  fmt::print("kinetic energy: {}\n", 0.5*mass*kineticEnergy);
-  mParticleKineticEnergy.push_back(0.5*mass*kineticEnergy);
+
+  mParticleKineticEnergy.push_back(0.5 * mass * kineticEnergy);
+  Scalar weight_max = *std::max_element(mCurrentParticleColorWeight.begin(),
+                                        mCurrentParticleColorWeight.end());
+  Scalar weight_min = *std::min_element(mCurrentParticleColorWeight.begin(),
+                                        mCurrentParticleColorWeight.end());
+
+#pragma omp parallel for
+  for (int i = 0; i < mCurrentParticleColorWeight.size(); ++i) {
+    mCurrentParticleColorWeight[i] =
+        (mCurrentParticleColorWeight[i] - weight_min) / (weight_max - weight_min);
+  }
 
 }
 

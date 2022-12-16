@@ -154,12 +154,17 @@ class Engine {
   EngineConfig getEngineConfig();
   void makeAosToSOA();
 
+  //Particle Coloring
+  std::vector<Scalar> mCurrentParticleColorWeight;
   //initial scene particle
   std::vector<Particle> m_sceneParticles;
+  //Energy recording
   std::vector<Scalar> mParticlePotentialEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
   std::vector<Scalar> mGridPotentialEnergy;
   std::vector<Scalar> mGridKineticEnergy;
+
+
 
  private:
 
