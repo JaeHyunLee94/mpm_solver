@@ -77,7 +77,7 @@ void initGui() {
 
 void run() {
   while (!glfwWindowShouldClose(renderer->getWindow())) {
-    engine->integrate(5e-4);
+    engine->integrateWithCuda(5e-4);
     renderer->renderWithGUI((*engine), (*gui));
     handler->handleInput();
 
