@@ -13,6 +13,10 @@
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
+  if(_is_first_step){
+    _is_first_step = false;
+    makeAosToSOA();
+  }
   calculateParticleKineticEnergy();
   initGrid();
   p2g(dt);
