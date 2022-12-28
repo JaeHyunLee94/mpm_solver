@@ -89,7 +89,11 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
   glDrawElementsInstanced(GL_TRIANGLES, m_sphere_mesh.getTriangleCount() * 3, GL_UNSIGNED_INT,
                           nullptr, engine.getParticleCount());
 
+
   gui.render();
+
+
+
 
   glfwPollEvents();
   int display_w, display_h;

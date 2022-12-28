@@ -84,11 +84,11 @@ class GUIwrapper {
   GUIwrapper &addPlotLine(const char *label_id,
                           const T *values,
                           int count,
-                          double xscale,
-                          double x0,
-                          ImPlotLineFlags flags,
-                          int offset,
-                          int stride) {
+                          double xscale=1,
+                          double x0=0,
+                          ImPlotLineFlags flags=0,
+                          int offset=0,
+                          int stride=sizeof(T)) {
 
     auto func = [label_id, values, count, xscale, x0, flags, offset, stride, this] {
       if (this->m_is_plot_started) {
@@ -120,7 +120,7 @@ class GUIwrapper {
   template<typename T>
   GUIwrapper &addPlotBars(const char *label_id,
                           const T *values,
-                          int count,
+                          int& count,
                           double bar_size = 0.67,
                           double shift = 0,
                           ImPlotBarsFlags flags = 0,
@@ -138,7 +138,7 @@ class GUIwrapper {
   GUIwrapper &addPlotBars(const char *label_id,
                           const T *xs,
                           const T *ys,
-                          int count,
+                          int& count,
                           double bar_size,
                           ImPlotBarsFlags flags = 0,
                           int offset = 0,
@@ -168,6 +168,43 @@ class GUIwrapper {
     };
     m_callback_list.push_back(func);
     return *this;
+  }
+  template<typename T>
+  GUIwrapper &addPlotScatter(const char *label_id,
+                          const T *values,
+                          int count,
+                          double xscale,
+                          double x0,
+                          ImPlotLineFlags flags,
+                          int offset,
+                          int stride) {
+
+    auto func = [label_id, values, count, xscale, x0, flags, offset, stride, this] {
+      if (this->m_is_plot_started) {
+        ImPlot::PlotScatter(label_id, values, count, xscale, x0, flags, offset, stride);
+      }
+    };
+    m_callback_list.push_back(func);
+    return *this;
+
+  }
+  template<typename T>
+  GUIwrapper &addPlotScatter(const char *label_id,
+                             const T* xs,
+                             const T* ys,
+                             int count,
+                             ImPlotLineFlags flags,
+                             int offset,
+                             int stride) {
+
+    auto func = [label_id, xs,ys, count, flags, offset, stride, this] {
+      if (this->m_is_plot_started) {
+        ImPlot::PlotScatter(label_id,xs,ys, count, flags, offset, stride);
+      }
+    };
+    m_callback_list.push_back(func);
+    return *this;
+
   }
   GUIwrapper &build();
 

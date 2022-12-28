@@ -17,13 +17,16 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
     _is_first_step = false;
     makeAosToSOA();
   }
+  if(!_is_running) return;
+  _currentFrame++;
+  _currentTime += dt;
   calculateParticleKineticEnergy();
   initGrid();
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
 
-  _currentFrame++;
+
 }
 
 #define SQR(x) ((x)*(x))
@@ -326,6 +329,13 @@ void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
 
 void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
+  if(_is_first_step){
+    _is_first_step = false;
+    makeAosToSOA();
+  }
+  if(!_is_running) return;
+  _currentFrame++;
+  _currentTime += dt;
   profiler.start("init");
   initGrid();
   profiler.endAndReport("init");
@@ -339,7 +349,7 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
   g2p(dt);
   profiler.endAndReport("g2p");
   profiler.makeArray();
-  _currentFrame++;
+
 
 }
 
@@ -524,6 +534,9 @@ void mpm::Engine::calculateParticleKineticEnergy() {
   }
 
   mParticleKineticEnergy.push_back(0.5 * mass * kineticEnergy);
+  mTime.push_back(_currentTime);
+  _plotting_window_size= std::min((int)mParticleKineticEnergy.size(),_maximum_plotting_window_size);
+  fmt::print("Particle Kinetic Energy: {}\n",0.5 * mass * kineticEnergy);
   Scalar weight_max = *std::max_element(mCurrentParticleColorWeight.begin(),
                                         mCurrentParticleColorWeight.end());
   Scalar weight_min = *std::min_element(mCurrentParticleColorWeight.begin(),
@@ -535,6 +548,16 @@ void mpm::Engine::calculateParticleKineticEnergy() {
         (mCurrentParticleColorWeight[i] - weight_min) / (weight_max - weight_min);
   }
 
+}
+bool mpm::Engine::isRunning() {
+  return _is_running;
+}
+void mpm::Engine::resume() {
+  _is_running = true;
+
+}
+void mpm::Engine::stop() {
+  _is_running = false;
 }
 
 

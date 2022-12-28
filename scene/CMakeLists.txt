@@ -38,11 +38,11 @@ set_target_properties(
 #        jelly
 #        PROPERTIES
 #        CUDA_SEPARABLE_COMPILATION ON)
-add_executable(jelly "jelly.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
-target_link_libraries(jelly PUBLIC renderer engine  imgui  glfw)
-target_include_directories(jelly PUBLIC  renderer engine  glfw )
+add_executable(jelly_cube "jelly_cube.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
+target_link_libraries(jelly_cube PUBLIC renderer engine  imgui  glfw)
+target_include_directories(jelly_cube PUBLIC  renderer engine  glfw )
 set_target_properties(
-        jelly
+        jelly_cube
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 

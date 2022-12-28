@@ -19,6 +19,7 @@
 #include "Grid.h"
 #include "Profiler.h"
 #include "cuda/CudaTypes.cuh"
+#include <queue>
 
 namespace mpm {
 
@@ -102,6 +103,7 @@ class Engine {
 #endif
       mParticlePotentialEnergy.reserve(1000);
       mParticleKineticEnergy.reserve(1000);
+      mTime.reserve(1000);
       mGridKineticEnergy.reserve(1000);
       mGridPotentialEnergy.reserve(1000);
 
@@ -147,7 +149,11 @@ class Engine {
   void addParticles(Particles &particles);
   void deleteAllParticle();
   unsigned int getParticleCount() const;
-  inline unsigned long long getCurrentFrame() const { return _currentFrame; }
+  inline unsigned long long& getCurrentFrame() const { return ( unsigned long long&)_currentFrame; }
+  inline int& getPlottingWindowSize() const { return ( int&)_plotting_window_size; }
+  inline int& getMaximumPlottingWindowSize() const { return ( int&)_maximum_plotting_window_size; }
+  Scalar* getTimePtr(){return mTime.data();}
+  Scalar* getParticleKineticEnergyPtr(){return mParticlePotentialEnergy.data();}
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
   void calculateParticleKineticEnergy();
 
@@ -161,11 +167,13 @@ class Engine {
   //Energy recording
   std::vector<Scalar> mParticlePotentialEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
+  std::vector<Scalar> mTime;
   std::vector<Scalar> mGridPotentialEnergy;
   std::vector<Scalar> mGridKineticEnergy;
 
-
-
+  bool isRunning();
+  void stop();
+  void resume();
  private:
 
   // cpu integration function
@@ -187,8 +195,12 @@ class Engine {
   unsigned int bound = 3;
   bool _is_first_step = true;
   bool _isCreated = false;
+  bool _is_running=false;
   int _deviceCount;
+  int _plotting_window_size=0;
+  int _maximum_plotting_window_size=500;
   unsigned long long _currentFrame;
+  Scalar _currentTime=0.0f;
   bool _is_cuda_available;
 
 //host ptr

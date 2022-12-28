@@ -77,7 +77,7 @@ void initGui() {
       .addWidgetInputFloat3("Light Src Position", (renderer)->getLight().getLightScrPosFloatPtr())
       .endGroup()
       .startGroup("Physics setting")
-      .addWidgetSliderFloat3("Gravity setting", (engine)->getGravityFloatPtr(), -10, 10)
+      .addWidgetInputFloat3("Gravity setting", (engine)->getGravityFloatPtr())
       .addWidgetButton("Reset Simulation", reset, engine, mpm::EngineConfig{
           false,
           mpm::MLS,
@@ -87,6 +87,13 @@ void initGui() {
           1.f / 64,
           1000,
           mpm::GPU
+      })
+      .addWidgetButton("Resume/Stop", [&](){
+        if(engine->isRunning()){
+          engine->stop();
+        }else{
+          engine->resume();
+        }
       })
       .endGroup()
       .build();

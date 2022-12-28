@@ -34,7 +34,7 @@ void initEngine(mpm::EngineConfig config) {
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-//  entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
+ //entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
   entity.loadFromFile("../../assets/bunny_1.bgeo");
 
   mpm::Particles
@@ -77,16 +77,12 @@ void initGui() {
       .endGroup()
       .startGroup("Physics setting")
       .addWidgetSliderFloat3("Gravity setting", (engine)->getGravityFloatPtr(), -10, 10)
-      .addWidgetButton("Reset Simulation", reset, engine, mpm::EngineConfig{
-
-          false,
-          mpm::MLS,
-          mpm::Explicit,
-          mpm::Dense,
-          mpm::Vec3i(64, 64, 64),
-          1.2f / 64,
-          1000,
-          mpm::GPU
+      .addWidgetButton("Resume/Stop", [&](){
+        if(engine->isRunning()){
+          engine->stop();
+        }else{
+          engine->resume();
+        }
       })
       .endGroup()
       .build();
