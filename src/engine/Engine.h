@@ -20,6 +20,7 @@
 #include "Profiler.h"
 #include "cuda/CudaTypes.cuh"
 #include <queue>
+#include <cuNSearch.h>
 
 namespace mpm {
 
@@ -66,7 +67,8 @@ class Engine {
             engine_config.m_gridResolution(2),
             engine_config.m_gridCellSize),
       _isCreated(true),
-      _currentFrame(0) {
+      _currentFrame(0),
+      mNeighborSearch(engine_config.m_gridResolution(0)/2.f){
     _deviceCount = -1;
 
     h_p_mass_ptr = nullptr; //scalar
@@ -170,7 +172,7 @@ class Engine {
   std::vector<Scalar> mTime;
   std::vector<Scalar> mGridPotentialEnergy;
   std::vector<Scalar> mGridKineticEnergy;
-
+  cuNSearch::NeighborhoodSearch mNeighborSearch;
   bool isRunning();
   void stop();
   void resume();
