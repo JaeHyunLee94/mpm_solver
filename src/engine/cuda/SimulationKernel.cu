@@ -44,6 +44,29 @@ __global__ void setParticleWiseFunction(mpm::MaterialType *d_material_type_ptr,
 }
 #define SQR(x) ((x)*(x))
 
+__device__ void calculateEnergyExchange(
+    const float9 &C,
+    const float9 &cauchy,
+    const Scalar &J,
+    const Scalar &V0,
+    const Scalar dt,
+    Scalar &out_exchange
+
+) {
+  out_exchange = -dt * 0.5f * J * V0 * (
+      cauchy[0] * 2 * C[0]
+          + cauchy[1] * (C[1] + C[3])
+          + cauchy[2] * (C[2] + C[6])
+          + cauchy[3] * (C[1] + C[3])
+          + cauchy[4] * 2 * C[4]
+          + cauchy[5] * (C[5] + C[7])
+          + cauchy[6] * (C[2] + C[6])
+          + cauchy[7] * (C[5] + C[7])
+          + cauchy[8] * 2 * C[8]
+  );
+
+}
+
 __global__ void p2gCuda(
     const Scalar *__restrict__ d_p_mass_ptr,
     const Scalar *__restrict__ d_p_vel_ptr,
@@ -55,6 +78,7 @@ __global__ void p2gCuda(
     StressFunc *__restrict__ d_p_stress_func_ptr,
     Scalar *__restrict__ d_g_mass_ptr,
     Scalar *__restrict__ d_g_vel_ptr,
+    Scalar *__restrict__ d_p_del_kinetic_ptr,
     const Scalar dt,
     const Scalar dx,
     const unsigned int particle_num,
@@ -75,10 +99,6 @@ __global__ void p2gCuda(
   float3 particle_pos = make_float3(d_p_pos_ptr[idx * 3], d_p_pos_ptr[idx * 3 + 1], d_p_pos_ptr[idx * 3 + 2]);
   float3 vel = make_float3(d_p_vel_ptr[idx * 3], d_p_vel_ptr[idx * 3 + 1], d_p_vel_ptr[idx * 3 + 2]);
 
-  //float3 particle_pos = trove::load_warp_contiguous((float3 *) (d_p_pos_ptr + idx * 3));
-  //float3 vel = trove::load_warp_contiguous((float3 *) (d_p_vel_ptr + idx * 3));
-  //float9 Cp=  trove::load_warp_contiguous((float9 *) (d_p_C_ptr + idx * 9));
-  //float9 F = trove::load_warp_contiguous((float9 *) (d_p_F_ptr + idx * 9));
   float9 Cp = {d_p_C_ptr[9 * idx],
                d_p_C_ptr[9 * idx + 1],
                d_p_C_ptr[9 * idx + 2],
@@ -115,31 +135,25 @@ __global__ void p2gCuda(
                              0.75f - SQR(fx.z - 1.0f)),
                  0.5f * make_float3(SQR(fx.x - 0.5f), SQR(fx.y - 0.5f), SQR(fx.z - 0.5f))};
 
-
-
-
-
-
-
-  ////TODO: optimization candidate: multiplication of matrix can be expensive.
-//  Scalar m_Jp_3 = J_p * J_p * J_p;
-//  Scalar pressure = (10.0f * (1.0f / (m_Jp_3 * m_Jp_3 * J_p) - 1));
-//  Scalar cauchy_stress[9] = {pressure, 0, 0, 0, pressure, 0, 0, 0, pressure};
   float9 cauchy_stress = {0, 0, 0, 0, 0, 0, 0, 0, 0};
   d_p_stress_func_ptr[idx](F, J, cauchy_stress);
+
+  Scalar energy_exchange = 0;
+  calculateEnergyExchange(Cp, cauchy_stress, J, V_0, dt, energy_exchange);
+  d_p_del_kinetic_ptr[idx] = energy_exchange;
 
   Scalar JVinv = J * V_0 * _4_dt_invdx2;
 
   Scalar affine[9] = {
-      cauchy_stress[0] * JVinv + mass * Cp[0],
-      cauchy_stress[1] * JVinv + mass * Cp[1],
-      cauchy_stress[2] * JVinv + mass * Cp[2],
-      cauchy_stress[3] * JVinv + mass * Cp[3],
-      cauchy_stress[4] * JVinv + mass * Cp[4],
-      cauchy_stress[5] * JVinv + mass * Cp[5],
-      cauchy_stress[6] * JVinv + mass * Cp[6],
-      cauchy_stress[7] * JVinv + mass * Cp[7],
-      cauchy_stress[8] * JVinv + mass * Cp[8]
+      -cauchy_stress[0] * JVinv + mass * Cp[0],
+      -cauchy_stress[1] * JVinv + mass * Cp[1],
+      -cauchy_stress[2] * JVinv + mass * Cp[2],
+      -cauchy_stress[3] * JVinv + mass * Cp[3],
+      -cauchy_stress[4] * JVinv + mass * Cp[4],
+      -cauchy_stress[5] * JVinv + mass * Cp[5],
+      -cauchy_stress[6] * JVinv + mass * Cp[6],
+      -cauchy_stress[7] * JVinv + mass * Cp[7],
+      -cauchy_stress[8] * JVinv + mass * Cp[8]
   };
 
   //Scatter the quantity
@@ -347,16 +361,11 @@ __global__ void g2pCuda(Scalar *__restrict__ d_p_mass_ptr,
   d_p_pos_ptr[idx * 3 + 1] = new_pos.y;
   d_p_pos_ptr[idx * 3 + 2] = new_pos.z;
 
-//  trove::store_warp_contiguous(new_v, (float3 *) (d_p_vel_ptr + idx * 3));
-//  trove::store_warp_contiguous(new_C, (float9 *) (d_p_C_ptr + idx * 9));
-//  trove::store_warp_contiguous(particle_pos + dt * new_v, (float3 *) (d_p_pos_ptr + idx * 3));
-//  trove::store_warp_contiguous(F, (float9 *) (d_p_F_ptr + idx * 9));
   d_p_J_ptr[idx] = J;
 
 }
 
 void mpm::Engine::integrateWithCuda(Scalar dt) {
-
 
   const unsigned int particle_num = m_sceneParticles.size();
   const unsigned int grid_num = _grid.getGridDimX() * _grid.getGridDimY() * _grid.getGridDimZ();
@@ -368,10 +377,16 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   unsigned int grid_grid_size = (grid_num + grid_block_size - 1) / grid_block_size;
 
   transferDataToDevice();
+  initEnergyData();
+  _is_first_step = false;
+  if (!_is_running) return;
 
-  if(!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
+
+
+  calculateParticleKineticEnergy();
+  calculateProspectiveParticleKineticEnergy();
 
   p2gCuda<<<particle_grid_size, particle_block_size>>>(d_p_mass_ptr,
                                                        d_p_vel_ptr,
@@ -383,6 +398,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        d_p_getStress_ptr,
                                                        d_g_mass_ptr,
                                                        d_g_vel_ptr,
+                                                       d_p_del_kinetic_ptr,
                                                        dt,
                                                        _grid.dx(),
                                                        particle_num,
@@ -414,7 +430,10 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimZ());
 
   transferDataFromDevice();
-  calculateParticleKineticEnergy();
+
+  fmt::print("Particle Kinetic Energy: {}, Particle pros energy:{}\n",
+             mParticleKineticEnergy[_currentFrame],
+             mParticleProspectiveKineticEnergy[_currentFrame]);
 
 
 }

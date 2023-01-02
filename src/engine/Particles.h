@@ -39,11 +39,13 @@ struct Particle{
   Vec3f m_vel;
   Mat3f m_F;
   Mat3f m_Cp;//TODO: APIC
+  Mat3f m_Sig;
   Scalar m_Jp;
   Scalar m_V0;
   getStressFuncHost getStress; //return cauchy stress
   projectFuncHost project; //project deformation gradient
   MaterialType m_material_type;
+
 
 };
 

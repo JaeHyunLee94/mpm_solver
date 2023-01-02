@@ -19,6 +19,22 @@ set_target_properties(
         PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
 
+add_executable(jelly_bunny "jelly_bunny.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
+target_link_libraries(jelly_bunny PUBLIC renderer engine  imgui  glfw )
+target_include_directories(jelly_bunny PUBLIC  renderer engine  glfw )
+set_target_properties(
+        jelly_bunny
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(jelly_sphere "jelly_sphere.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
+target_link_libraries(jelly_sphere PUBLIC renderer engine  imgui  glfw )
+target_include_directories(jelly_sphere PUBLIC  renderer engine  glfw )
+set_target_properties(
+        jelly_sphere
+        PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON)
+
 add_executable(water_fall_bunny "water_fall_bunny.cu"  )#${ALL_SRC} ${glew_src} ${IMGUI_SRC}
 target_link_libraries(water_fall_bunny PUBLIC renderer engine  imgui  glfw )
 target_include_directories(water_fall_bunny PUBLIC  renderer engine  glfw )

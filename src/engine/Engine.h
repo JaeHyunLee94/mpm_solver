@@ -67,7 +67,7 @@ class Engine {
             engine_config.m_gridResolution(2),
             engine_config.m_gridCellSize),
       _isCreated(true),
-      _currentFrame(0),
+      _currentFrame(-1),
       mNeighborSearch(engine_config.m_gridResolution(0)/2.f){
     _deviceCount = -1;
 
@@ -77,6 +77,7 @@ class Engine {
     h_p_F_ptr = nullptr;
     h_p_J_ptr = nullptr;
     h_p_C_ptr = nullptr;
+    h_p_del_kinetic_ptr = nullptr;
     h_p_V0_ptr = nullptr;
     h_p_material_type_ptr = nullptr;
 
@@ -86,6 +87,7 @@ class Engine {
     d_p_F_ptr = nullptr;
     d_p_J_ptr = nullptr;
     d_p_C_ptr = nullptr;
+    d_p_del_kinetic_ptr = nullptr;
     d_p_V0_ptr = nullptr;
     d_p_material_type_ptr = nullptr;
     d_p_getStress_ptr = nullptr;
@@ -103,11 +105,10 @@ class Engine {
       fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
   _engineConfig.m_device = CPU;
 #endif
-      mParticlePotentialEnergy.reserve(1000);
+      mParticleInitialTotalEnergy.reserve(1000);
       mParticleKineticEnergy.reserve(1000);
+      mParticleProspectiveKineticEnergy.reserve(1000);
       mTime.reserve(1000);
-      mGridKineticEnergy.reserve(1000);
-      mGridPotentialEnergy.reserve(1000);
 
     }
 
@@ -121,6 +122,7 @@ class Engine {
     delete h_p_J_ptr;
     delete h_p_C_ptr;
     delete h_p_V0_ptr;
+    delete h_p_del_kinetic_ptr;
     delete h_p_material_type_ptr;
 
     cudaFree(d_p_pos_ptr);
@@ -135,6 +137,7 @@ class Engine {
     cudaFree(d_p_project_ptr);
     cudaFree(d_g_mass_ptr);
     cudaFree(d_g_vel_ptr);
+    cudaFree (d_p_del_kinetic_ptr);
   }; //TODO: delete all ptr
 
 
@@ -155,10 +158,12 @@ class Engine {
   inline int& getPlottingWindowSize() const { return ( int&)_plotting_window_size; }
   inline int& getMaximumPlottingWindowSize() const { return ( int&)_maximum_plotting_window_size; }
   Scalar* getTimePtr(){return mTime.data();}
-  Scalar* getParticleKineticEnergyPtr(){return mParticlePotentialEnergy.data();}
+  Scalar* getParticleKineticEnergyPtr(){return mParticleKineticEnergy.data();}
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
-  void calculateParticleKineticEnergy();
 
+  void calculateParticleKineticEnergy();
+  void calculateProspectiveParticleKineticEnergy();
+  void initEnergyData();
   EngineConfig getEngineConfig();
   void makeAosToSOA();
 
@@ -167,11 +172,12 @@ class Engine {
   //initial scene particle
   std::vector<Particle> m_sceneParticles;
   //Energy recording
-  std::vector<Scalar> mParticlePotentialEnergy;
+  std::vector<Scalar> mParticleInitialTotalEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
+  std::vector<Scalar> mParticleProspectiveKineticEnergy;
   std::vector<Scalar> mTime;
-  std::vector<Scalar> mGridPotentialEnergy;
-  std::vector<Scalar> mGridKineticEnergy;
+
+
   cuNSearch::NeighborhoodSearch mNeighborSearch;
   bool isRunning();
   void stop();
@@ -213,6 +219,8 @@ class Engine {
   Scalar *h_p_J_ptr; //scalar
   Scalar *h_p_C_ptr; //3x3
   Scalar *h_p_V0_ptr;
+  Scalar *h_p_del_kinetic_ptr;
+  Scalar *h_p_pros_energy_ptr;
   mpm::MaterialType *h_p_material_type_ptr;
   getStressFuncHost *h_p_getStress_ptr;
   projectFuncHost *h_p_project_ptr;
@@ -225,6 +233,7 @@ class Engine {
   Scalar *d_p_J_ptr; //scalar
   Scalar *d_p_C_ptr; //3x3
   Scalar *d_p_V0_ptr;
+  Scalar *d_p_del_kinetic_ptr;
   mpm::MaterialType *d_p_material_type_ptr;
   StressFunc *d_p_getStress_ptr;
   ProjectFunc *d_p_project_ptr;

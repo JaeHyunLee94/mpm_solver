@@ -20,6 +20,7 @@ void mpm::Particles::fetchFromEntity(mpm::Entity &entity, mpm::MaterialType mate
     particle.m_Jp=1;
     particle.m_V0=init_vol;
     particle.m_Cp.setZero();
+    particle.m_Sig.setZero();
     particle.m_material_type = material_type;
 
     switch (particle.m_material_type) {

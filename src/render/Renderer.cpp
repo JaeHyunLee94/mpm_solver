@@ -57,7 +57,7 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                         (void *) (m_sphere_mesh.getVertexCount() * sizeof(glm::vec3)));
-  glEnableVertexAttribArray(2);
+
 
 
   //particle attribute
@@ -90,12 +90,10 @@ void Renderer::renderWithGUI(mpm::Engine &engine, GUIwrapper &gui) {
                           nullptr, engine.getParticleCount());
 
 
-  gui.render();
-
-
 
 
   glfwPollEvents();
+  gui.render();
   int display_w, display_h;
   glfwGetFramebufferSize(m_window, &display_w, &display_h);
   glViewport(0, 0, display_w, display_h);

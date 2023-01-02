@@ -14,15 +14,15 @@ __device__ void getStressWeaklyCompressibleWaterOnDevice(const float9 &F, Scalar
   Scalar m_Jp_3 = J * J * J;
   Scalar pressure = (10.0f * (1.0f / (m_Jp_3) - 1));
 
-  stress[0] = pressure;
+  stress[0] = -pressure;
   stress[1] = 0;
   stress[2] = 0;
   stress[3] = 0;
-  stress[4] = pressure;
+  stress[4] = -pressure;
   stress[5] = 0;
   stress[6] = 0;
   stress[7] = 0;
-  stress[8] = pressure;
+  stress[8] = -pressure;
 
 }
 __device__ void projectWeaklyCompressibleWaterOnDevice(float9 &F, float9 &C, Scalar &J, Scalar dt) {
@@ -31,9 +31,7 @@ __device__ void projectWeaklyCompressibleWaterOnDevice(float9 &F, float9 &C, Sca
 }
 
 __device__ void getStressCorotatedJellyOnDevice(const float9 &F, Scalar &J, float9 &stress) {
-  /*
-   * TODO: Implement the weakly compressible model
-   */
+
   const Scalar E = 300; //Young's modulus
   const Scalar nu = 0.2;  //# Poisson's ratio
   const Scalar mu_0 = E / (2 * (1 + nu));
@@ -55,16 +53,7 @@ __device__ void getStressCorotatedJellyOnDevice(const float9 &F, Scalar &J, floa
       V[0], V[3], V[6],
       V[1], V[4], V[7],
       V[2], V[5], V[8]);
-//   svd(F.data[0], F.data[1], F.data[2],
-//       F.data[3], F.data[4], F.data[5],
-//       F.data[6], F.data[7], F.data[8],
-//       U[0], U[1], U[2],
-//       U[3], U[4], U[5],
-//       U[6], U[7], U[8],
-//       singular_values[0],singular_values[1],singular_values[2],
-//       V[0], V[1], V[2],
-//       V[3], V[4], V[5],
-//       V[6], V[7], V[8]);
+
 
   J = singular_values[0] * singular_values[1] * singular_values[2];
   Scalar inv_J = 1.f / J;
@@ -78,8 +67,8 @@ __device__ void getStressCorotatedJellyOnDevice(const float9 &F, Scalar &J, floa
                   F[6] - R[6], F[7] - R[7], F[8] - R[8]};
   float F_R_FT[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
   matrixMatrixTransposeMultiplication(F_R, _F, F_R_FT);
-  Scalar deviortic_coeff = -inv_J * 2 * mu_0;
-  Scalar dilational_coeff = -lambda_0 * (J - 1);
+  Scalar deviortic_coeff = inv_J * 2 * mu_0;
+  Scalar dilational_coeff = lambda_0 * (J - 1);
 
   stress[0] = deviortic_coeff *F_R_FT[0] + dilational_coeff;
   stress[1] = deviortic_coeff *F_R_FT[1];

@@ -13,11 +13,11 @@
 
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
-  if(_is_first_step){
+  if (_is_first_step) {
     _is_first_step = false;
     makeAosToSOA();
   }
-  if(!_is_running) return;
+  if (!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
   calculateParticleKineticEnergy();
@@ -25,7 +25,6 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
-
 
 }
 
@@ -329,11 +328,11 @@ void mpm::Engine::setEngineConfig(EngineConfig engine_config) {
 
 void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
 
-  if(_is_first_step){
+  if (_is_first_step) {
     _is_first_step = false;
     makeAosToSOA();
   }
-  if(!_is_running) return;
+  if (!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
   profiler.start("init");
@@ -350,7 +349,6 @@ void mpm::Engine::integrateWithProfile(mpm::Scalar dt, Profiler &profiler) {
   profiler.endAndReport("g2p");
   profiler.makeArray();
 
-
 }
 
 void mpm::Engine::transferDataToDevice() {
@@ -365,6 +363,7 @@ void mpm::Engine::transferDataToDevice() {
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_F_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_del_kinetic_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size()));
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_getStress_ptr, sizeof(StressFunc) * m_sceneParticles.size()));
@@ -385,7 +384,6 @@ void mpm::Engine::transferDataToDevice() {
 
     configureDeviceParticleType();
 
-    _is_first_step = false;
   }
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_mass_ptr,
@@ -411,6 +409,10 @@ void mpm::Engine::transferDataToDevice() {
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_C_ptr,
                                  h_p_C_ptr,
                                  9 * sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_del_kinetic_ptr,
+                                 h_p_del_kinetic_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr,
                                  h_p_V0_ptr,
@@ -455,6 +457,10 @@ void mpm::Engine::transferDataFromDevice() {
                                  d_p_C_ptr,
                                  9 * sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_del_kinetic_ptr,
+                                 d_p_del_kinetic_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr,
                                  d_p_V0_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
@@ -471,6 +477,7 @@ void mpm::Engine::makeAosToSOA() {
   h_p_F_ptr = new Scalar[m_sceneParticles.size() * 9];
   h_p_J_ptr = new Scalar[m_sceneParticles.size()];
   h_p_C_ptr = new Scalar[m_sceneParticles.size() * 9];
+  h_p_del_kinetic_ptr = new Scalar[m_sceneParticles.size()];
   h_p_V0_ptr = new Scalar[m_sceneParticles.size()];
 
   h_p_material_type_ptr = new mpm::MaterialType[m_sceneParticles.size()];
@@ -508,6 +515,7 @@ void mpm::Engine::makeAosToSOA() {
     h_p_C_ptr[i * 9 + 6] = m_sceneParticles[i].m_Cp(0, 2);
     h_p_C_ptr[i * 9 + 7] = m_sceneParticles[i].m_Cp(1, 2);
     h_p_C_ptr[i * 9 + 8] = m_sceneParticles[i].m_Cp(2, 2);
+    h_p_del_kinetic_ptr[i] = 0.0f;
 
     h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
     h_p_getStress_ptr[i] = m_sceneParticles[i].getStress;
@@ -521,7 +529,6 @@ void mpm::Engine::calculateParticleKineticEnergy() {
   Scalar kineticEnergy = 0.0;
   Scalar mass = h_p_mass_ptr[0];
 
-  mCurrentParticleColorWeight.resize(m_sceneParticles.size());
 #pragma omp parallel for reduction(+ : kineticEnergy)
   for (int i = 0; i < m_sceneParticles.size(); ++i) {
 
@@ -531,12 +538,13 @@ void mpm::Engine::calculateParticleKineticEnergy() {
     mCurrentParticleColorWeight[i] = speed_sqr;
 #pragma omp atomic
     kineticEnergy += speed_sqr;
+
   }
 
   mParticleKineticEnergy.push_back(0.5 * mass * kineticEnergy);
   mTime.push_back(_currentTime);
-  _plotting_window_size= std::min((int)mParticleKineticEnergy.size(),_maximum_plotting_window_size);
-  fmt::print("Particle Kinetic Energy: {}\n",0.5 * mass * kineticEnergy);
+  _plotting_window_size = std::min((int) mParticleKineticEnergy.size(), _maximum_plotting_window_size);
+
   Scalar weight_max = *std::max_element(mCurrentParticleColorWeight.begin(),
                                         mCurrentParticleColorWeight.end());
   Scalar weight_min = *std::min_element(mCurrentParticleColorWeight.begin(),
@@ -559,6 +567,41 @@ void mpm::Engine::resume() {
 void mpm::Engine::stop() {
   _is_running = false;
 }
+void mpm::Engine::calculateProspectiveParticleKineticEnergy() {
+  if (_currentFrame == 0) {
+    mParticleProspectiveKineticEnergy.push_back(mParticleKineticEnergy[0]);
+  } else {
+    Scalar del_sum = 0.0;
+    Scalar previous_prospective_energy = mParticleProspectiveKineticEnergy[_currentFrame - 1];
+#pragma omp parallel for reduction(+ : deltaKinetic_sum)
+    for (int i = 0; i < m_sceneParticles.size(); ++i) {
+
+      Scalar update_quantity = h_p_del_kinetic_ptr[i];
+      Scalar after_update = update_quantity +previous_prospective_energy;
+      after_update=std::min(std::max(after_update,0.0f),mParticleInitialTotalEnergy[i]);
+
+      del_sum += update_quantity;
+    }
+    mParticleProspectiveKineticEnergy.push_back(previous_prospective_energy+del_sum);
+  }
+
+}
+void mpm::Engine::initEnergyData() {
+  if (_is_first_step) {
+    mParticleInitialTotalEnergy.resize(m_sceneParticles.size());
+    mCurrentParticleColorWeight.resize(m_sceneParticles.size());
+#pragma atomic parallel for
+    for (int i = 0; i < m_sceneParticles.size(); ++i) {
+      Scalar vel_sqr = h_p_vel_ptr[i * 3] * h_p_vel_ptr[i * 3] +
+          h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
+          h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
+      mParticleInitialTotalEnergy[i] = 0.5f * h_p_mass_ptr[i] * vel_sqr;
+    }
+  }
+
+}
+
+
 
 
 
