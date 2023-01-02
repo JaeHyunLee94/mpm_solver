@@ -364,6 +364,7 @@ void mpm::Engine::transferDataToDevice() {
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_J_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_C_ptr, sizeof(Scalar) * m_sceneParticles.size() * 9));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_del_kinetic_ptr, sizeof(Scalar) * m_sceneParticles.size()));
+    CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_pros_energy_ptr, sizeof(Scalar) * m_sceneParticles.size()));
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_V0_ptr, sizeof(Scalar) * m_sceneParticles.size()));
 
     CUDA_ERR_CHECK(cudaMalloc((void **) &d_p_getStress_ptr, sizeof(StressFunc) * m_sceneParticles.size()));
@@ -414,6 +415,10 @@ void mpm::Engine::transferDataToDevice() {
                                  h_p_del_kinetic_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyHostToDevice));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_pros_energy_ptr,
+                                 h_p_pros_energy_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr,
                                  h_p_V0_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
@@ -461,6 +466,10 @@ void mpm::Engine::transferDataFromDevice() {
                                  d_p_del_kinetic_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyDeviceToHost));
+  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_pros_energy_ptr,
+                                 d_p_pros_energy_ptr,
+                                 sizeof(Scalar) * m_sceneParticles.size(),
+                                 cudaMemcpyDeviceToHost));
   CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_V0_ptr,
                                  d_p_V0_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
@@ -478,6 +487,7 @@ void mpm::Engine::makeAosToSOA() {
   h_p_J_ptr = new Scalar[m_sceneParticles.size()];
   h_p_C_ptr = new Scalar[m_sceneParticles.size() * 9];
   h_p_del_kinetic_ptr = new Scalar[m_sceneParticles.size()];
+  h_p_pros_energy_ptr = new Scalar[m_sceneParticles.size()];
   h_p_V0_ptr = new Scalar[m_sceneParticles.size()];
 
   h_p_material_type_ptr = new mpm::MaterialType[m_sceneParticles.size()];
@@ -516,6 +526,7 @@ void mpm::Engine::makeAosToSOA() {
     h_p_C_ptr[i * 9 + 7] = m_sceneParticles[i].m_Cp(1, 2);
     h_p_C_ptr[i * 9 + 8] = m_sceneParticles[i].m_Cp(2, 2);
     h_p_del_kinetic_ptr[i] = 0.0f;
+    h_p_pros_energy_ptr[i] = 0.0f;
 
     h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
     h_p_getStress_ptr[i] = m_sceneParticles[i].getStress;

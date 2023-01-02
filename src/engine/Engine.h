@@ -78,6 +78,7 @@ class Engine {
     h_p_J_ptr = nullptr;
     h_p_C_ptr = nullptr;
     h_p_del_kinetic_ptr = nullptr;
+    h_p_pros_energy_ptr = nullptr;
     h_p_V0_ptr = nullptr;
     h_p_material_type_ptr = nullptr;
 
@@ -88,6 +89,7 @@ class Engine {
     d_p_J_ptr = nullptr;
     d_p_C_ptr = nullptr;
     d_p_del_kinetic_ptr = nullptr;
+    d_p_pros_energy_ptr = nullptr;
     d_p_V0_ptr = nullptr;
     d_p_material_type_ptr = nullptr;
     d_p_getStress_ptr = nullptr;
@@ -124,6 +126,7 @@ class Engine {
     delete h_p_V0_ptr;
     delete h_p_del_kinetic_ptr;
     delete h_p_material_type_ptr;
+    delete h_p_pros_energy_ptr;
 
     cudaFree(d_p_pos_ptr);
     cudaFree(d_p_vel_ptr);
@@ -138,6 +141,7 @@ class Engine {
     cudaFree(d_g_mass_ptr);
     cudaFree(d_g_vel_ptr);
     cudaFree (d_p_del_kinetic_ptr);
+    cudaFree(d_p_pros_energy_ptr);
   }; //TODO: delete all ptr
 
 
@@ -234,6 +238,7 @@ class Engine {
   Scalar *d_p_C_ptr; //3x3
   Scalar *d_p_V0_ptr;
   Scalar *d_p_del_kinetic_ptr;
+  Scalar *d_p_pros_energy_ptr;
   mpm::MaterialType *d_p_material_type_ptr;
   StressFunc *d_p_getStress_ptr;
   ProjectFunc *d_p_project_ptr;
