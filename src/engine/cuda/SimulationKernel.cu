@@ -42,6 +42,24 @@ __global__ void setParticleWiseFunction(mpm::MaterialType *d_material_type_ptr,
     d_project_func_ptr[idx] = mpm::projectCorotatedJellyOnDevice;
   }
 }
+__global__ void calculateCurrentKineticEnergy(
+    const Scalar *__restrict__ d_p_mass_ptr,
+    const Scalar *__restrict__ d_p_vel_ptr,
+    const Scalar *__restrict__ d_p_del_kinetic_ptr,
+    Scalar *__restrict__ d_p_pros_energy_ptr,
+    Scalar *__restrict__ d_p_kinetic_energy_ptr,
+    const unsigned int particle_num
+) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  if (idx >= particle_num) return;
+  float3 vel = make_float3(d_p_vel_ptr[idx * 3], d_p_vel_ptr[idx * 3 + 1], d_p_vel_ptr[idx * 3 + 2]);
+  Scalar En  = d_p_pros_energy_ptr[idx];
+  d_p_kinetic_energy_ptr[idx] = 0.5f * d_p_mass_ptr[idx] * dot(vel,vel);
+  d_p_pros_energy_ptr[idx] = d_p_del_kinetic_ptr[idx]+ En;
+
+
+}
+
 #define SQR(x) ((x)*(x))
 
 __device__ void calculateEnergyExchange(
@@ -384,7 +402,6 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   _currentFrame++;
   _currentTime += dt;
 
-
   calculateParticleKineticEnergy();
   calculateProspectiveParticleKineticEnergy();
 
@@ -434,7 +451,6 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   fmt::print("Particle Kinetic Energy: {}, Particle pros energy:{}\n",
              mParticleKineticEnergy[_currentFrame],
              mParticleProspectiveKineticEnergy[_currentFrame]);
-
 
 }
 
