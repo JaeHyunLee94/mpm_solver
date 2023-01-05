@@ -17,14 +17,38 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
     _is_first_step = false;
     makeAosToSOA();
   }
-  if (!_is_running) return;
+  //if (!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
-  calculateParticleKineticEnergy();
+//  calculateParticleKineticEnergy();
   initGrid();
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
+//#pragma omp parallel for
+//  for (int i = 0; i < getParticleCount(); i++) {
+//    Scalar sqr = std::sqrt(h_p_vel_ptr[3 * i] * h_p_vel_ptr[3 * i] + h_p_vel_ptr[3 * i + 1] * h_p_vel_ptr[3 * i + 1]
+//                               + h_p_vel_ptr[3 * i + 2] * h_p_vel_ptr[3 * i + 2]);
+//    if (sqr > 1.2f) {
+//      //fmt::print("{}\n", sqr);
+//      h_p_vel_ptr[3 * i] *= 1.f / sqr;
+//      h_p_vel_ptr[3 * i + 1] *= 1.f / sqr;
+//      h_p_vel_ptr[3 * i + 2] *= 1.f / sqr;
+//
+////      h_p_F_ptr[9 * i] = 1.f;
+////      h_p_F_ptr[9 * i + 1] = 0.f;
+////      h_p_F_ptr[9 * i + 2] = 0.f;
+////      h_p_F_ptr[9 * i + 3] = 0.f;
+////      h_p_F_ptr[9 * i + 4] = 1.f;
+////      h_p_F_ptr[9 * i + 5] = 0.f;
+////      h_p_F_ptr[9 * i + 6] = 0.f;
+////      h_p_F_ptr[9 * i + 7] = 0.f;
+////      h_p_F_ptr[9 * i + 8] = 1.f;
+//
+//      //fmt::print("{},{},{}\n", h_p_vel_ptr[3 * i], h_p_vel_ptr[3 * i + 1], h_p_vel_ptr[3 * i + 2]);
+//
+//    }
+//  }
 
 }
 
@@ -71,7 +95,6 @@ void mpm::Engine::p2g(Scalar dt) {
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function
-    ////TODO: optimization candidate: so many constructor call?
     Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
                   Vec3f(0.75f - SQR(fx[0] - 1.0f),
                         0.75f - SQR(fx[1] - 1.0f),
@@ -420,8 +443,8 @@ void mpm::Engine::transferDataToDevice() {
                                  h_p_pros_energy_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyHostToDevice));
-  CUDA_ERR_CHECK(cudaMemcpyAsync(h_p_kinetic_energy_ptr,
-                                 d_p_kinetic_energy_ptr,
+  CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_kinetic_energy_ptr,
+                                 h_p_kinetic_energy_ptr,
                                  sizeof(Scalar) * m_sceneParticles.size(),
                                  cudaMemcpyHostToDevice));
   CUDA_ERR_CHECK(cudaMemcpyAsync(d_p_V0_ptr,
@@ -535,10 +558,9 @@ void mpm::Engine::makeAosToSOA() {
     h_p_C_ptr[i * 9 + 6] = m_sceneParticles[i].m_Cp(0, 2);
     h_p_C_ptr[i * 9 + 7] = m_sceneParticles[i].m_Cp(1, 2);
     h_p_C_ptr[i * 9 + 8] = m_sceneParticles[i].m_Cp(2, 2);
-    h_p_del_kinetic_ptr[i] =  0.0f;
-    h_p_kinetic_energy_ptr[i] =  0.5f*m_sceneParticles[i].m_mass*m_sceneParticles[i].m_vel.squaredNorm();
+    h_p_del_kinetic_ptr[i] = 0.0f;
+    h_p_kinetic_energy_ptr[i] = 0.5f * m_sceneParticles[i].m_mass * m_sceneParticles[i].m_vel.squaredNorm();
     h_p_pros_energy_ptr[i] = h_p_kinetic_energy_ptr[i];
-
 
     h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
     h_p_getStress_ptr[i] = m_sceneParticles[i].getStress;
@@ -596,16 +618,16 @@ void mpm::Engine::calculateProspectiveParticleKineticEnergy() {
   } else {
     Scalar del_sum = 0.0;
     Scalar previous_prospective_energy = mParticleProspectiveKineticEnergy[_currentFrame - 1];
-#pragma omp parallel for reduction(+ : deltaKinetic_sum)
+#pragma omp parallel for reduction(+ : del_sum)
     for (int i = 0; i < m_sceneParticles.size(); ++i) {
 
       Scalar update_quantity = h_p_del_kinetic_ptr[i];
-      Scalar after_update = update_quantity +previous_prospective_energy;
-      after_update=std::min(std::max(after_update,0.0f),mParticleInitialTotalEnergy[i]);
+      Scalar after_update = update_quantity + previous_prospective_energy;
+      after_update = std::min(std::max(after_update, 0.0f), mParticleInitialTotalEnergy[i]);
 
       del_sum += update_quantity;
     }
-    mParticleProspectiveKineticEnergy.push_back(previous_prospective_energy+del_sum);
+    mParticleProspectiveKineticEnergy.push_back(previous_prospective_energy + del_sum);
   }
 
 }
@@ -619,6 +641,30 @@ void mpm::Engine::initEnergyData() {
           h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
           h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
       mParticleInitialTotalEnergy[i] = 0.5f * h_p_mass_ptr[i] * vel_sqr;
+    }
+  }
+
+}
+void mpm::Engine::logExplodedParticle() {
+
+#pragma omp parallel for
+  for (int i = 0; i < m_sceneParticles.size(); ++i) {
+    if (std::isnan(h_p_vel_ptr[i * 3]) || std::isnan(h_p_vel_ptr[i * 3 + 1]) || std::isnan(h_p_vel_ptr[i * 3 + 2])) {
+      fmt::print("i:{}\t vel:{},{},{}\t F:{},{},{},{},{},{},{},{},{}\n",
+                 i,
+                 h_p_vel_ptr[i * 3],
+                 h_p_vel_ptr[i * 3 + 1],
+                 h_p_vel_ptr[i * 3 + 2],
+                 h_p_F_ptr[i * 9],
+                 h_p_F_ptr[i * 9 + 1],
+                 h_p_F_ptr[i * 9 + 2],
+                 h_p_F_ptr[i * 9 + 3],
+                 h_p_F_ptr[i * 9 + 4],
+                 h_p_F_ptr[i * 9 + 5],
+                 h_p_F_ptr[i * 9 + 6],
+                 h_p_F_ptr[i * 9 + 7],
+                 h_p_F_ptr[i * 9 + 8]
+      );
     }
   }
 

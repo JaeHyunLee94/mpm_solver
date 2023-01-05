@@ -160,6 +160,7 @@ class Engine {
   float *getGravityFloatPtr();
   void addParticles(Particles &particles);
   void deleteAllParticle();
+  void logExplodedParticle();
   unsigned int getParticleCount() const;
   inline unsigned long long& getCurrentFrame() const { return ( unsigned long long&)_currentFrame; }
   inline int& getPlottingWindowSize() const { return ( int&)_plotting_window_size; }

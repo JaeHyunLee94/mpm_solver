@@ -24,6 +24,25 @@ void KernelLaunch(std::string &&tag, int gs, int bs, void(*f)(Arguments...), Arg
   CUDA_ERR_CHECK(cudaDeviceSynchronize());
 }
 
+__global__ void logNAN(
+    const Scalar *__restrict__ d_p_vel_ptr,
+    const Scalar *__restrict__ d_p_F_ptr,
+    const unsigned int particle_num
+    ){
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if(idx>=particle_num) return;
+
+    if(isnan(d_p_vel_ptr[3*idx]) || isnan(d_p_vel_ptr[3*idx+1])|| isnan(d_p_vel_ptr[3*idx+2])
+    || isnan(d_p_F_ptr[9*idx]) || isnan(d_p_F_ptr[9*idx+1])|| isnan(d_p_F_ptr[9*idx+2])
+    || isnan(d_p_F_ptr[9*idx+3]) || isnan(d_p_F_ptr[9*idx+4])|| isnan(d_p_F_ptr[9*idx+5])
+    || isnan(d_p_F_ptr[9*idx+6]) || isnan(d_p_F_ptr[9*idx+7])|| isnan(d_p_F_ptr[9*idx+8])
+        ){
+        printf("NAN detected at %d\n", idx);
+    }
+
+
+}
 __global__ void setParticleWiseFunction(mpm::MaterialType *d_material_type_ptr,
                                         StressFunc *d_stress_func_ptr,
                                         ProjectFunc *d_project_func_ptr,
@@ -397,7 +416,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   transferDataToDevice();
   initEnergyData();
   _is_first_step = false;
-  if (!_is_running) return;
+  //if (!_is_running) return;
 
   _currentFrame++;
   _currentTime += dt;
@@ -446,6 +465,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
 
+//  logNAN<<<particle_grid_size, particle_block_size>>>(d_p_vel_ptr,d_p_F_ptr,particle_num);
   transferDataFromDevice();
 
   fmt::print("Particle Kinetic Energy: {}, Particle pros energy:{}\n",
