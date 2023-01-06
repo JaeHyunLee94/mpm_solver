@@ -36,7 +36,7 @@ void initEngine(mpm::EngineConfig config){
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
   entity.loadCube(mpm::Vec3f(1, 1, 1), 0.4, 2*pow(res,3)/(4*32)*16);
-  //entity.loadFromFile("../../assets/sphere.bgeo");
+  //entity.loadFromFile("../../assets/cube.bgeo");
   mpm::Particles particles(entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx*0.5,3),1,mpm::Vec3f (0,0,0)); //TODO: rho, initvol
 //  for(auto particle : particles.mParticleList){
 //    if(particle.m_pos.y()>1.f) particle.m_vel = mpm::Vec3f(0,4.f,0);
@@ -99,7 +99,7 @@ void initDevice(){
 }
 void run(){
   while ( !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
-        engine->integrate(2e-3);
+        engine->integrate(5e-3);
 //    engine->integrate(5e-4);
     renderer->renderWithGUI((*engine), (*gui));
 

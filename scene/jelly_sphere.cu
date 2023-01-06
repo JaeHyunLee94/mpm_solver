@@ -12,7 +12,7 @@ InputHandler* handler = nullptr;
 GUIwrapper* gui = nullptr;
 mpm::Engine* engine = nullptr;
 
-
+float dt= 1.5e-3;
 float x_data[10] = {0,1,2,3,4,5,6,7,8,9};
 float y_data[10] = {25,29,21,17,15,13,11,9,7,5};
 void initRenderer(){
@@ -50,10 +50,11 @@ void initEngine(mpm::EngineConfig config){
   }
   y_center/=particles.getParticleNum();
   for(int i=0;i<particles.getParticleNum();i++){
-    if(particles.mParticleList[i].m_pos.y()>y_center) particles.mParticleList[i].m_vel[1] = 3.f;
-    else particles.mParticleList[i].m_vel[1] = -3.f;
+    if(particles.mParticleList[i].m_pos.y()>y_center) particles.mParticleList[i].m_vel[1] = 1.f;
+    else particles.mParticleList[i].m_vel[1] = -1.f;
   }
   engine->addParticles(particles);
+  fmt::print("CFL: {}\n", 1.0f*dt/engine->getEngineConfig().m_gridCellSize);
 
 }
 void initGui(){
@@ -104,8 +105,8 @@ void initDevice(){
 }
 void run(){
   while ( !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
-        engine->integrateWithCuda(8e-4);
-//    engine->integrate(5e-4);
+        //engine->integrateWithCuda(8e-4);
+    engine->integrate(dt);
     renderer->renderWithGUI((*engine), (*gui));
 
 
