@@ -87,14 +87,14 @@ void mpm::Engine::p2g(Scalar dt) {
     Scalar Jp = h_p_J_ptr[p];
     Scalar V0 = h_p_V0_ptr[p];
     Scalar mass = h_p_mass_ptr[p];
-    h_p_vel_ptr[3 * p + 0] *= 0.7;
-    h_p_vel_ptr[3 * p + 1] *=0.7;
-    h_p_vel_ptr[3 * p + 2]*=0.7;
+//    h_p_vel_ptr[3 * p + 0] *= 0.7;
+//    h_p_vel_ptr[3 * p + 1] *=0.7;
+//    h_p_vel_ptr[3 * p + 2]*=0.7;
     Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
 
-//    auto &particle = m_sceneParticles[p];
+
     Vec3f Xp = pos * inv_dx;
-//    float Xp[3] = {h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
     Vec3f fx = Xp - base.cast<Scalar>();
     //TODO: cubic function

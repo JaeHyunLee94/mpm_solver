@@ -38,10 +38,6 @@ void initEngine(mpm::EngineConfig config){
   entity.loadFromFile("../../assets/Sphere.bgeo");
 
   mpm::Particles particles(entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx*0.5,3),1,mpm::Vec3f (0,0,0)); //TODO: rho, initvol
-//  for(auto particle : particles.mParticleList){
-//    if(particle.m_pos.y()>1.f) particle.m_vel = mpm::Vec3f(0,4.f,0);
-//    else particle.m_vel = mpm::Vec3f(0,-4.f,0);
-//  }
 
   float y_center=0.0;
 
@@ -50,8 +46,8 @@ void initEngine(mpm::EngineConfig config){
   }
   y_center/=particles.getParticleNum();
   for(int i=0;i<particles.getParticleNum();i++){
-    if(particles.mParticleList[i].m_pos.y()>y_center) particles.mParticleList[i].m_vel[1] = 1.f;
-    else particles.mParticleList[i].m_vel[1] = -1.f;
+    if(particles.mParticleList[i].m_pos.y()>y_center) particles.mParticleList[i].m_vel[1] = 0.000001f;
+    else particles.mParticleList[i].m_vel[1] = - 0.000001f;
   }
   engine->addParticles(particles);
   fmt::print("CFL: {}\n", 1.0f*dt/engine->getEngineConfig().m_gridCellSize);
