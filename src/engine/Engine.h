@@ -170,6 +170,7 @@ class Engine {
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
 
   void calculateParticleKineticEnergy();
+  void calculateParticleMomentum();
   void calculateProspectiveParticleKineticEnergy();
   void initEnergyData();
   EngineConfig getEngineConfig();
@@ -183,6 +184,8 @@ class Engine {
   std::vector<Scalar> mParticleInitialTotalEnergy;
   std::vector<Scalar> mParticleKineticEnergy;
   std::vector<Scalar> mParticleProspectiveKineticEnergy;
+  std::vector<Scalar> mParticleLinearMomentum;
+  std::vector<Scalar> mParticleAngularMomentum;
   std::vector<Scalar> mTime;
 
 

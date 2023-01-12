@@ -17,38 +17,14 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
     _is_first_step = false;
     makeAosToSOA();
   }
-  //if (!_is_running) return;
+  if (!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
-//  calculateParticleKineticEnergy();
+  calculateParticleKineticEnergy();
   initGrid();
   p2g(dt);
   updateGrid(dt);
   g2p(dt);
-//#pragma omp parallel for
-//  for (int i = 0; i < getParticleCount(); i++) {
-//    Scalar sqr = std::sqrt(h_p_vel_ptr[3 * i] * h_p_vel_ptr[3 * i] + h_p_vel_ptr[3 * i + 1] * h_p_vel_ptr[3 * i + 1]
-//                               + h_p_vel_ptr[3 * i + 2] * h_p_vel_ptr[3 * i + 2]);
-//    if (sqr > 1.0f) {
-//      //fmt::print("{}\n", sqr);
-//      h_p_vel_ptr[3 * i] *= 1.0f/sqr;
-//      h_p_vel_ptr[3 * i + 1] *= 1.0f/sqr;
-//      h_p_vel_ptr[3 * i + 2] *= 1.0f/sqr;
-//
-//      h_p_F_ptr[9 * i] = 1.f;
-//      h_p_F_ptr[9 * i + 1] = 0.f;
-//      h_p_F_ptr[9 * i + 2] = 0.f;
-//      h_p_F_ptr[9 * i + 3] = 0.f;
-//      h_p_F_ptr[9 * i + 4] = 1.f;
-//      h_p_F_ptr[9 * i + 5] = 0.f;
-//      h_p_F_ptr[9 * i + 6] = 0.f;
-//      h_p_F_ptr[9 * i + 7] = 0.f;
-//      h_p_F_ptr[9 * i + 8] = 1.f;
-////
-////      fmt::print("{},{},{}\n", h_p_vel_ptr[3 * i], h_p_vel_ptr[3 * i + 1], h_p_vel_ptr[3 * i + 2]);
-//
-//    }
-//  }
 
 }
 
@@ -87,9 +63,7 @@ void mpm::Engine::p2g(Scalar dt) {
     Scalar Jp = h_p_J_ptr[p];
     Scalar V0 = h_p_V0_ptr[p];
     Scalar mass = h_p_mass_ptr[p];
-//    h_p_vel_ptr[3 * p + 0] *= 0.7;
-//    h_p_vel_ptr[3 * p + 1] *=0.7;
-//    h_p_vel_ptr[3 * p + 2]*=0.7;
+
     Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
 
 
@@ -109,14 +83,7 @@ void mpm::Engine::p2g(Scalar dt) {
     Scalar sqr = std::sqrt(h_p_vel_ptr[3 * p] * h_p_vel_ptr[3 * p] + h_p_vel_ptr[3 * p + 1] * h_p_vel_ptr[3 * p + 1]
                                + h_p_vel_ptr[3 * p + 2] * h_p_vel_ptr[3 * p + 2]);
 
-    Scalar coeff = 1.0f;
-//    if (sqr > 1.f) {
-//      h_p_vel_ptr[3 * p + 0] *= 1.0f / sqr;
-//      h_p_vel_ptr[3 * p + 1] *= 1.0f / sqr;
-//      h_p_vel_ptr[3 * p + 2] *= 1.0f / sqr;
-//
-//      coeff = 0.5f;
-//    }
+
 
     Mat3f stress = cauchy_stress
         * (Jp * V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
@@ -135,7 +102,7 @@ void mpm::Engine::p2g(Scalar dt) {
               (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ()
                   + grid_index[2];
           Scalar mass_frag = weight * mass;
-          Vec3f momentum_frag = weight * (mass * vel + coeff * affine * dpos);
+          Vec3f momentum_frag = weight * (mass * vel + affine * dpos);
 
           //TODO: optimization candidate: critical section?
 #pragma omp atomic
@@ -672,6 +639,9 @@ void mpm::Engine::logExplodedParticle() {
       );
     }
   }
+
+}
+void mpm::Engine::calculateParticleMomentum() {
 
 }
 

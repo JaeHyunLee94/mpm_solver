@@ -99,7 +99,7 @@ void initDevice(){
 }
 void run(){
   while ( !glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
-        engine->integrate(5e-3);
+        engine->integrate(5e-4);
 //    engine->integrate(5e-4);
     renderer->renderWithGUI((*engine), (*gui));
 
