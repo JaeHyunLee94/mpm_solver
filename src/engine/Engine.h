@@ -20,7 +20,8 @@
 #include "Profiler.h"
 #include "cuda/CudaTypes.cuh"
 #include <queue>
-#include <cuNSearch.h>
+#include <CompactNSearch.h>
+
 
 namespace mpm {
 
@@ -68,7 +69,7 @@ class Engine {
             engine_config.m_gridCellSize),
       _isCreated(true),
       _currentFrame(-1),
-      mNeighborSearch(engine_config.m_gridResolution(0)/2.f){
+      mNeighborSearch(engine_config.m_gridCellSize * 2.0f) {
     _deviceCount = -1;
 
     h_p_mass_ptr = nullptr; //scalar
@@ -82,6 +83,7 @@ class Engine {
     h_p_kinetic_energy_ptr = nullptr;
     h_p_V0_ptr = nullptr;
     h_p_material_type_ptr = nullptr;
+    h_p_max_energy_ptr = nullptr;
 
     d_p_mass_ptr = nullptr;
     d_p_vel_ptr = nullptr;
@@ -91,6 +93,7 @@ class Engine {
     d_p_C_ptr = nullptr;
     d_p_del_kinetic_ptr = nullptr;
     d_p_pros_energy_ptr = nullptr;
+
     d_p_V0_ptr = nullptr;
     d_p_material_type_ptr = nullptr;
     d_p_getStress_ptr = nullptr;
@@ -108,10 +111,10 @@ class Engine {
       fmt::print("There is no cuda device available.\n Set to CPU mode.\n");
   _engineConfig.m_device = CPU;
 #endif
-      mParticleInitialTotalEnergy.reserve(1000);
-      mParticleKineticEnergy.reserve(1000);
-      mParticleProspectiveKineticEnergy.reserve(1000);
-      mTime.reserve(1000);
+//      mParticleInitialTotalEnergy.reserve(1000);
+//      mParticleKineticEnergy.reserve(1000);
+//      mParticleProspectiveKineticEnergy.reserve(1000);
+//      mTime.reserve(1000);
 
     }
 
@@ -129,6 +132,7 @@ class Engine {
     delete h_p_material_type_ptr;
     delete h_p_pros_energy_ptr;
     delete h_p_kinetic_energy_ptr;
+    delete h_p_max_energy_ptr;
 
     cudaFree(d_p_pos_ptr);
     cudaFree(d_p_vel_ptr);
@@ -165,11 +169,11 @@ class Engine {
   inline unsigned long long& getCurrentFrame() const { return ( unsigned long long&)_currentFrame; }
   inline int& getPlottingWindowSize() const { return ( int&)_plotting_window_size; }
   inline int& getMaximumPlottingWindowSize() const { return ( int&)_maximum_plotting_window_size; }
-  Scalar* getTimePtr(){return mTime.data();}
-  Scalar* getParticleKineticEnergyPtr(){return mParticleKineticEnergy.data();}
+//  Scalar* getTimePtr(){return mTime.data();}
+//  Scalar* getParticleKineticEnergyPtr(){return mParticleKineticEnergy.data();}
   Scalar *getParticlePosPtr() { return h_p_pos_ptr; }
 
-  void calculateParticleKineticEnergy();
+  void calculateEnergy();
   void calculateParticleMomentum();
   void calculateProspectiveParticleKineticEnergy();
   void initEnergyData();
@@ -181,25 +185,40 @@ class Engine {
   //initial scene particle
   std::vector<Particle> m_sceneParticles;
   //Energy recording
-  std::vector<Scalar> mParticleInitialTotalEnergy;
-  std::vector<Scalar> mParticleKineticEnergy;
-  std::vector<Scalar> mParticleProspectiveKineticEnergy;
-  std::vector<Scalar> mParticleLinearMomentum;
-  std::vector<Scalar> mParticleAngularMomentum;
-  std::vector<Scalar> mTime;
 
 
-  cuNSearch::NeighborhoodSearch mNeighborSearch;
+
+  CompactNSearch::NeighborhoodSearch mNeighborSearch;
   bool isRunning();
   void stop();
   void resume();
- private:
 
-  // cpu integration function
   void initGrid();
   void p2g(Scalar dt);
   void updateGrid(Scalar dt);
   void g2p(Scalar dt);
+
+  void applyRPICViscosity(Scalar dt,int count);
+  void p2gRPIC(Scalar dt);
+  void updateGridRPIC(Scalar dt);
+  void g2pRPIC(Scalar dt);
+
+  void applyOurViscosity(Scalar dt);
+  void addNeighbor(std::vector<int>& unstableParticles,int point_set_id);
+  void applyp2g2p(std::vector<int>& unstableParticles);
+  bool isStableParticle(int i,Scalar dt);
+
+
+  Scalar *h_p_del_kinetic_ptr;
+  Scalar *h_p_pros_energy_ptr;
+  Scalar *h_p_kinetic_energy_ptr;
+  Scalar* h_p_max_energy_ptr;
+
+
+ private:
+
+  // cpu integration function
+
 
   //CUDA relevant function
 
@@ -226,13 +245,11 @@ class Engine {
   Scalar *h_p_mass_ptr; //scalar
   Scalar *h_p_vel_ptr; //vec3
   Scalar *h_p_pos_ptr;// vec3
-  Scalar *h_p_F_ptr; //3x3
+  Scalar *h_p_F_ptr; //3x3hh
   Scalar *h_p_J_ptr; //scalar
   Scalar *h_p_C_ptr; //3x3
   Scalar *h_p_V0_ptr;
-  Scalar *h_p_del_kinetic_ptr;
-  Scalar *h_p_pros_energy_ptr;
-  Scalar *h_p_kinetic_energy_ptr;
+
   mpm::MaterialType *h_p_material_type_ptr;
   getStressFuncHost *h_p_getStress_ptr;
   projectFuncHost *h_p_project_ptr;

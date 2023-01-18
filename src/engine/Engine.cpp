@@ -14,18 +14,21 @@
 void mpm::Engine::integrate(mpm::Scalar dt) {
 
   if (_is_first_step) {
-    _is_first_step = false;
     makeAosToSOA();
+    initEnergyData();
+    _is_first_step = false;
   }
   if (!_is_running) return;
   _currentFrame++;
   _currentTime += dt;
-  calculateParticleKineticEnergy();
+
+  calculateEnergy();
   initGrid();
   p2g(dt);
   updateGrid(dt);
-  g2p(dt);
 
+  g2p(dt);
+  fmt::print("{},{}\n", h_p_pros_energy_ptr[1005],h_p_kinetic_energy_ptr[1005]);
 }
 
 #define SQR(x) ((x)*(x))
@@ -66,7 +69,6 @@ void mpm::Engine::p2g(Scalar dt) {
 
     Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
 
-
     Vec3f Xp = pos * inv_dx;
 
     Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
@@ -79,11 +81,15 @@ void mpm::Engine::p2g(Scalar dt) {
                   0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
 
     Mat3f cauchy_stress = h_p_getStress_ptr[p](F, Jp);//particle.getStress(&particle);//TODO: Std::bind
+    Mat3f D = 0.5f * (C + C.transpose());
+
+    Scalar dotDsigma = D(0, 0) * cauchy_stress(0, 0) + D(1, 0) * cauchy_stress(1, 0) + D(2, 0) * cauchy_stress(2, 0) +
+        D(0, 1) * cauchy_stress(0, 1) + D(1, 1) * cauchy_stress(1, 1) + D(2, 1) * cauchy_stress(2, 1) +
+        D(0, 2) * cauchy_stress(0, 2) + D(1, 2) * cauchy_stress(1, 2) + D(2, 2) * cauchy_stress(2, 2);
+    h_p_del_kinetic_ptr[p] = -dt * Jp * h_p_V0_ptr[p] * dotDsigma;
 
     Scalar sqr = std::sqrt(h_p_vel_ptr[3 * p] * h_p_vel_ptr[3 * p] + h_p_vel_ptr[3 * p + 1] * h_p_vel_ptr[3 * p + 1]
                                + h_p_vel_ptr[3 * p + 2] * h_p_vel_ptr[3 * p + 2]);
-
-
 
     Mat3f stress = cauchy_stress
         * (Jp * V0 * _4_dt_invdx2); ////TODO: optimization candidate: use inv_dx rather than dx
@@ -494,6 +500,7 @@ void mpm::Engine::makeAosToSOA() {
   h_p_pros_energy_ptr = new Scalar[m_sceneParticles.size()];
   h_p_kinetic_energy_ptr = new Scalar[m_sceneParticles.size()];
   h_p_V0_ptr = new Scalar[m_sceneParticles.size()];
+  h_p_max_energy_ptr = new Scalar[m_sceneParticles.size()];
 
   h_p_material_type_ptr = new mpm::MaterialType[m_sceneParticles.size()];
   h_p_getStress_ptr = new mpm::getStressFuncHost[m_sceneParticles.size()];
@@ -533,6 +540,7 @@ void mpm::Engine::makeAosToSOA() {
     h_p_del_kinetic_ptr[i] = 0.0f;
     h_p_kinetic_energy_ptr[i] = 0.5f * m_sceneParticles[i].m_mass * m_sceneParticles[i].m_vel.squaredNorm();
     h_p_pros_energy_ptr[i] = h_p_kinetic_energy_ptr[i];
+    h_p_max_energy_ptr[i] = h_p_kinetic_energy_ptr[i];
 
     h_p_material_type_ptr[i] = m_sceneParticles[i].m_material_type;
     h_p_getStress_ptr[i] = m_sceneParticles[i].getStress;
@@ -542,38 +550,6 @@ void mpm::Engine::makeAosToSOA() {
 
 }
 
-void mpm::Engine::calculateParticleKineticEnergy() {
-  Scalar kineticEnergy = 0.0;
-  Scalar mass = h_p_mass_ptr[0];
-
-#pragma omp parallel for reduction(+ : kineticEnergy)
-  for (int i = 0; i < m_sceneParticles.size(); ++i) {
-
-    Scalar speed_sqr = h_p_vel_ptr[i * 3] * h_p_vel_ptr[i * 3] +
-        h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
-        h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
-    mCurrentParticleColorWeight[i] = speed_sqr;
-#pragma omp atomic
-    kineticEnergy += speed_sqr;
-
-  }
-
-  mParticleKineticEnergy.push_back(0.5 * mass * kineticEnergy);
-  mTime.push_back(_currentTime);
-  _plotting_window_size = std::min((int) mParticleKineticEnergy.size(), _maximum_plotting_window_size);
-
-  Scalar weight_max = *std::max_element(mCurrentParticleColorWeight.begin(),
-                                        mCurrentParticleColorWeight.end());
-  Scalar weight_min = *std::min_element(mCurrentParticleColorWeight.begin(),
-                                        mCurrentParticleColorWeight.end());
-
-#pragma omp parallel for
-  for (int i = 0; i < mCurrentParticleColorWeight.size(); ++i) {
-    mCurrentParticleColorWeight[i] =
-        (mCurrentParticleColorWeight[i] - weight_min) / (weight_max - weight_min);
-  }
-
-}
 bool mpm::Engine::isRunning() {
   return _is_running;
 }
@@ -584,37 +560,36 @@ void mpm::Engine::resume() {
 void mpm::Engine::stop() {
   _is_running = false;
 }
-void mpm::Engine::calculateProspectiveParticleKineticEnergy() {
-  if (_currentFrame == 0) {
-    mParticleProspectiveKineticEnergy.push_back(mParticleKineticEnergy[0]);
-  } else {
-    Scalar del_sum = 0.0;
-    Scalar previous_prospective_energy = mParticleProspectiveKineticEnergy[_currentFrame - 1];
-#pragma omp parallel for reduction(+ : del_sum)
-    for (int i = 0; i < m_sceneParticles.size(); ++i) {
+void mpm::Engine::calculateEnergy() {
 
-      Scalar update_quantity = h_p_del_kinetic_ptr[i];
-      Scalar after_update = update_quantity + previous_prospective_energy;
-      after_update = std::min(std::max(after_update, 0.0f), mParticleInitialTotalEnergy[i]);
-
-      del_sum += update_quantity;
-    }
-    mParticleProspectiveKineticEnergy.push_back(previous_prospective_energy + del_sum);
+#pragma omp parallel for
+  for (int i = 0; i < m_sceneParticles.size(); i++) {
+    Scalar speed_sqr = h_p_vel_ptr[3 * i] * h_p_vel_ptr[3 * i] + h_p_vel_ptr[3 * i + 1] * h_p_vel_ptr[3 * i + 1]
+        + h_p_vel_ptr[3 * i + 2] * h_p_vel_ptr[3 * i + 2];
+    h_p_kinetic_energy_ptr[i] = 0.5f * h_p_mass_ptr[i] * speed_sqr;
   }
+
+  if (_currentFrame == 0) {
+#pragma omp parallel for
+    for (int i = 0; i < m_sceneParticles.size(); i++) {
+      h_p_pros_energy_ptr[i] = h_p_kinetic_energy_ptr[i];
+      h_p_max_energy_ptr[i] = h_p_kinetic_energy_ptr[i];
+    }
+
+  } else {
+#pragma omp parallel for
+    for (int i = 0; i < m_sceneParticles.size(); i++) {
+      h_p_pros_energy_ptr[i] += h_p_del_kinetic_ptr[i];
+
+      h_p_pros_energy_ptr[i] = std::max(std::min(h_p_pros_energy_ptr[i], h_p_max_energy_ptr[i]), 0.0f);
+
+    }
+  }
+}
+void mpm::Engine::calculateProspectiveParticleKineticEnergy() {
 
 }
 void mpm::Engine::initEnergyData() {
-  if (_is_first_step) {
-    mParticleInitialTotalEnergy.resize(m_sceneParticles.size());
-    mCurrentParticleColorWeight.resize(m_sceneParticles.size());
-#pragma atomic parallel for
-    for (int i = 0; i < m_sceneParticles.size(); ++i) {
-      Scalar vel_sqr = h_p_vel_ptr[i * 3] * h_p_vel_ptr[i * 3] +
-          h_p_vel_ptr[i * 3 + 1] * h_p_vel_ptr[i * 3 + 1] +
-          h_p_vel_ptr[i * 3 + 2] * h_p_vel_ptr[i * 3 + 2];
-      mParticleInitialTotalEnergy[i] = 0.5f * h_p_mass_ptr[i] * vel_sqr;
-    }
-  }
 
 }
 void mpm::Engine::logExplodedParticle() {
@@ -642,6 +617,388 @@ void mpm::Engine::logExplodedParticle() {
 
 }
 void mpm::Engine::calculateParticleMomentum() {
+
+//  Vec3f linear_momentum = Vec3f::Zero();
+//  Vec3f angular_momentum = Vec3f::Zero();
+//#pragma omp parallel for
+//  for (int i = 0; i < m_sceneParticles.size(); ++i) {
+//    linear_momentum += h_p_mass_ptr[i] * Vec3f(h_p_vel_ptr[i * 3], h_p_vel_ptr[i * 3 + 1], h_p_vel_ptr[i * 3 + 2]);
+//    angular_momentum += h_p_mass_ptr[i] *
+//        Vec3f(h_p_pos_ptr[i * 3], h_p_pos_ptr[i * 3 + 1], h_p_pos_ptr[i * 3 + 2]).cross(Vec3f(h_p_vel_ptr[i * 3],
+//                                                                                              h_p_vel_ptr[i * 3 + 1],
+//                                                                                              h_p_vel_ptr[i * 3 + 2]));
+//  }
+
+}
+void mpm::Engine::applyRPICViscosity(mpm::Scalar dt, int count) {
+  for (int i = 0; i < count; ++i) {
+    initGrid();
+    p2gRPIC(dt);
+    updateGridRPIC(dt);
+    g2pRPIC(dt);
+  }
+
+}
+void mpm::Engine::p2gRPIC(mpm::Scalar dt) {
+  const Scalar inv_dx = _grid.invdx();
+  const Scalar _4_dt_invdx2 = 4.0f * dt * inv_dx * inv_dx;
+#pragma omp parallel for
+  for (int p = 0; p < m_sceneParticles.size(); ++p) {
+
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+
+    Mat3f C = Mat3f::Zero();
+    C(0, 0) = h_p_C_ptr[9 * p + 0];
+    C(1, 0) = h_p_C_ptr[9 * p + 1];
+    C(2, 0) = h_p_C_ptr[9 * p + 2];
+    C(0, 1) = h_p_C_ptr[9 * p + 3];
+    C(1, 1) = h_p_C_ptr[9 * p + 4];
+    C(2, 1) = h_p_C_ptr[9 * p + 5];
+    C(0, 2) = h_p_C_ptr[9 * p + 6];
+    C(1, 2) = h_p_C_ptr[9 * p + 7];
+    C(2, 2) = h_p_C_ptr[9 * p + 8];
+
+    Mat3f C_t = Mat3f::Zero();
+    C_t(0, 0) = h_p_C_ptr[9 * p + 0];
+    C_t(0, 1) = h_p_C_ptr[9 * p + 1];
+    C_t(0, 2) = h_p_C_ptr[9 * p + 2];
+    C_t(1, 0) = h_p_C_ptr[9 * p + 3];
+    C_t(1, 1) = h_p_C_ptr[9 * p + 4];
+    C_t(1, 2) = h_p_C_ptr[9 * p + 5];
+    C_t(2, 0) = h_p_C_ptr[9 * p + 6];
+    C_t(2, 1) = h_p_C_ptr[9 * p + 7];
+    C_t(2, 2) = h_p_C_ptr[9 * p + 8];
+
+    Scalar mass = h_p_mass_ptr[p];
+
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+
+    Vec3f Xp = pos * inv_dx;
+
+    Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
+    Vec3f fx = Xp - base.cast<Scalar>();
+    //TODO: cubic function
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1.0f),
+                        0.75f - SQR(fx[1] - 1.0f),
+                        0.75f - SQR(fx[2] - 1.0f)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
+
+    Mat3f viscosity = 0.5f * mass * (C - C_t);
+    //Scatter the quantity
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
+          Scalar weight = w[i][0] * w[j][1] * w[k][2];
+          Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
+          //i * _y_res * _z_res + j * _z_res + k
+          Vec3i grid_index = base + offset;
+          ////TODO: optimization candidate: assign dimension out side of the loop
+          unsigned int idx =
+              (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ()
+                  + grid_index[2];
+          Scalar mass_frag = weight * mass;
+          Vec3f momentum_frag = weight * (mass * vel + viscosity * dpos);
+
+          //TODO: optimization candidate: critical section?
+#pragma omp atomic
+          _grid.m_mass[idx] += mass_frag;
+#pragma omp atomic
+          _grid.m_vel[idx][0] += momentum_frag[0];
+#pragma omp atomic
+          _grid.m_vel[idx][1] += momentum_frag[1];
+#pragma omp atomic
+          _grid.m_vel[idx][2] += momentum_frag[2];
+
+        }
+      }
+    }
+
+  }
+}
+void mpm::Engine::g2pRPIC(mpm::Scalar dt) {
+
+  const Scalar inv_dx = _grid.invdx();
+  const Scalar _4_invdx2 = 4.0f * inv_dx * inv_dx;
+#pragma omp parallel for
+  for (int p = 0; p < m_sceneParticles.size(); ++p) {
+
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+    Scalar Jp = h_p_J_ptr[p];
+
+    Vec3f Xp = pos * inv_dx;
+    Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
+    Vec3f fx = Xp - base.cast<Scalar>();
+    //TODO: cubic function
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1),
+                        0.75f - SQR(fx[1] - 1),
+                        0.75f - SQR(fx[2] - 1)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
+
+    Vec3f new_v = Vec3f::Zero();
+    Mat3f new_C = Mat3f::Zero();
+
+
+
+    //Scatter the quantity
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
+          Scalar weight = w[i][0] * w[j][1] * w[k][2];
+          Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
+          //i * _y_res * _z_res + j * _z_res + k
+          Vec3i grid_index = base + offset;
+          unsigned int
+              idx =
+              (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ() + grid_index[2];
+          new_v += weight * _grid.m_vel[idx];
+          new_C += (weight * _4_invdx2) * _grid.m_vel[idx] * dpos.transpose();
+
+        }
+      }
+    }
+    //h_p_project_ptr[p](F, Jp, C, dt);
+
+
+    h_p_vel_ptr[3 * p + 0] = new_v[0];
+    h_p_vel_ptr[3 * p + 1] = new_v[1];
+    h_p_vel_ptr[3 * p + 2] = new_v[2];
+//    h_p_C_ptr[9 * p + 0] = new_C(0, 0);
+//    h_p_C_ptr[9 * p + 1] = new_C(1, 0);
+//    h_p_C_ptr[9 * p + 2] = new_C(2, 0);
+//    h_p_C_ptr[9 * p + 3] = new_C(0, 1);
+//    h_p_C_ptr[9 * p + 4] = new_C(1, 1);
+//    h_p_C_ptr[9 * p + 5] = new_C(2, 1);
+//    h_p_C_ptr[9 * p + 6] = new_C(0, 2);
+//    h_p_C_ptr[9 * p + 7] = new_C(1, 2);
+//    h_p_C_ptr[9 * p + 8] = new_C(2, 2);
+
+
+
+  }
+
+}
+void mpm::Engine::updateGridRPIC(mpm::Scalar dt) {
+
+  const unsigned int x_dim = _grid.getGridDimX();
+  const unsigned int y_dim = _grid.getGridDimY();
+  const unsigned int z_dim = _grid.getGridDimZ();
+
+#pragma omp parallel for
+  for (int i = 0; i < _grid.getGridSize(); ++i) {
+    ////TODO: optimization candidate: should we iterate all? we can use continue;
+    ////TODO: optimization candidate: use signbit();
+
+    if (_grid.m_mass[i] > 0) {
+      _grid.m_vel[i] /= _grid.m_mass[i];
+      unsigned int xi = i / (y_dim * z_dim);
+      unsigned int yi = (i - xi * y_dim * z_dim) / z_dim;
+      unsigned int zi = i - xi * y_dim * z_dim - yi * z_dim;
+      if (xi < bound && _grid.m_vel[i][0] < 0) {
+        _grid.m_vel[i][0] = 0;
+      } else if (xi > x_dim - bound && _grid.m_vel[i][0] > 0) {
+        _grid.m_vel[i][0] = 0;
+      }
+      if (yi < bound && _grid.m_vel[i][1] < 0) {
+        _grid.m_vel[i][1] = 0;
+      } else if (yi > y_dim - bound && _grid.m_vel[i][1] > 0) {
+        _grid.m_vel[i][1] = 0;
+      }
+      if (zi < bound && _grid.m_vel[i][2] < 0) {
+        _grid.m_vel[i][2] = 0;
+      } else if (zi > z_dim - bound && _grid.m_vel[i][2] > 0) {
+        _grid.m_vel[i][2] = 0;
+      }
+
+    }
+
+  }
+
+}
+void mpm::Engine::applyOurViscosity(mpm::Scalar dt) {
+
+  static bool is_first_call = true;
+  unsigned int point_set_id = -1;
+  if (is_first_call) {
+    point_set_id = mNeighborSearch.add_point_set(h_p_pos_ptr, getParticleCount());
+    mNeighborSearch.find_neighbors();
+    is_first_call = false;
+  }
+
+  std::queue<int> q;
+  std::vector<int> touchCount(getParticleCount(), 0);
+  std::vector<int> unstableParticleList;
+  unstableParticleList.reserve(100);
+  int max_touch_count = 5;
+  //init;
+  for (int i = 0; i < getParticleCount(); ++i) {
+    if (!isStableParticle(i, dt) && touchCount[i] < max_touch_count) {
+      unstableParticleList.push_back(i);
+      fmt::print("unstable particle: {}\n", i);
+      touchCount[i]++;
+    }
+  }
+
+}
+bool mpm::Engine::isStableParticle(int i, mpm::Scalar dt) {
+  Scalar speed = sqrt(h_p_vel_ptr[3 * i + 0] * h_p_vel_ptr[3 * i + 0] +
+      h_p_vel_ptr[3 * i + 1] * h_p_vel_ptr[3 * i + 1] +
+      h_p_vel_ptr[3 * i + 2] * h_p_vel_ptr[3 * i + 2]);
+
+  Scalar CFL = speed * dt / (_grid.dx());
+//  fmt::print("CFL : {}\n",CFL);
+  return CFL < 0.2f;
+
+}
+void mpm::Engine::applyp2g2p(std::vector<int> &unstableParticles) {
+  initGrid();
+
+  const Scalar inv_dx = _grid.invdx();
+  // const Scalar _4_dt_invdx2 = 4.0f * dt * inv_dx * inv_dx;
+  const Scalar _4_invdx2 = 4.0f * inv_dx * inv_dx;
+
+  //p2g
+  for (int j = 0; j < unstableParticles.size(); j++) {
+    int p = unstableParticles[j];
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+
+    Mat3f C = Mat3f::Zero();
+    C(0, 0) = h_p_C_ptr[9 * p + 0];
+    C(1, 0) = h_p_C_ptr[9 * p + 1];
+    C(2, 0) = h_p_C_ptr[9 * p + 2];
+    C(0, 1) = h_p_C_ptr[9 * p + 3];
+    C(1, 1) = h_p_C_ptr[9 * p + 4];
+    C(2, 1) = h_p_C_ptr[9 * p + 5];
+    C(0, 2) = h_p_C_ptr[9 * p + 6];
+    C(1, 2) = h_p_C_ptr[9 * p + 7];
+    C(2, 2) = h_p_C_ptr[9 * p + 8];
+
+    Mat3f C_t = Mat3f::Zero();
+    C_t(0, 0) = h_p_C_ptr[9 * p + 0];
+    C_t(0, 1) = h_p_C_ptr[9 * p + 1];
+    C_t(0, 2) = h_p_C_ptr[9 * p + 2];
+    C_t(1, 0) = h_p_C_ptr[9 * p + 3];
+    C_t(1, 1) = h_p_C_ptr[9 * p + 4];
+    C_t(1, 2) = h_p_C_ptr[9 * p + 5];
+    C_t(2, 0) = h_p_C_ptr[9 * p + 6];
+    C_t(2, 1) = h_p_C_ptr[9 * p + 7];
+    C_t(2, 2) = h_p_C_ptr[9 * p + 8];
+
+    Scalar mass = h_p_mass_ptr[p];
+
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+
+    Vec3f Xp = pos * inv_dx;
+
+    Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
+    Vec3f fx = Xp - base.cast<Scalar>();
+    //TODO: cubic function
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1.0f),
+                        0.75f - SQR(fx[1] - 1.0f),
+                        0.75f - SQR(fx[2] - 1.0f)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
+
+    Mat3f viscosity = 0.5f * mass * (C - C_t);
+    //Scatter the quantity
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
+          Scalar weight = w[i][0] * w[j][1] * w[k][2];
+          Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
+          //i * _y_res * _z_res + j * _z_res + k
+          Vec3i grid_index = base + offset;
+          ////TODO: optimization candidate: assign dimension out side of the loop
+          unsigned int idx =
+              (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ()
+                  + grid_index[2];
+          Scalar mass_frag = weight * mass;
+          Vec3f momentum_frag = weight * (mass * vel + viscosity * dpos);
+
+          //TODO: optimization candidate: critical section?
+#pragma omp atomic
+          _grid.m_mass[idx] += mass_frag;
+#pragma omp atomic
+          _grid.m_vel[idx][0] += momentum_frag[0];
+#pragma omp atomic
+          _grid.m_vel[idx][1] += momentum_frag[1];
+#pragma omp atomic
+          _grid.m_vel[idx][2] += momentum_frag[2];
+
+        }
+      }
+    }
+
+  }
+  //g2p
+  for (int j = 0; j < unstableParticles.size(); j++) {
+
+    int p = unstableParticles[j];
+    Vec3f pos{h_p_pos_ptr[3 * p + 0], h_p_pos_ptr[3 * p + 1], h_p_pos_ptr[3 * p + 2]};
+    Vec3f vel{h_p_vel_ptr[3 * p + 0], h_p_vel_ptr[3 * p + 1], h_p_vel_ptr[3 * p + 2]};
+    Scalar Jp = h_p_J_ptr[p];
+
+    Vec3f Xp = pos * inv_dx;
+    Vec3i base = (Xp - Vec3f(0.5f, 0.5f, 0.5f)).cast<int>();
+    Vec3f fx = Xp - base.cast<Scalar>();
+    //TODO: cubic function
+    Vec3f w[3] = {0.5f * Vec3f(SQR(1.5f - fx[0]), SQR(1.5f - fx[1]), SQR(1.5f - fx[2])),
+                  Vec3f(0.75f - SQR(fx[0] - 1),
+                        0.75f - SQR(fx[1] - 1),
+                        0.75f - SQR(fx[2] - 1)),
+                  0.5f * Vec3f(SQR(fx[0] - 0.5f), SQR(fx[1] - 0.5f), SQR(fx[2] - 0.5f))};
+
+    Vec3f new_v = Vec3f::Zero();
+    Mat3f new_C = Mat3f::Zero();
+
+
+
+    //Scatter the quantity
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          Vec3i offset{i, j, k};
+          Scalar weight = w[i][0] * w[j][1] * w[k][2];
+          Vec3f dpos = (offset.cast<Scalar>() - fx) * _grid.dx();
+          //i * _y_res * _z_res + j * _z_res + k
+          Vec3i grid_index = base + offset;
+          unsigned int
+              idx =
+              (grid_index[0] * _grid.getGridDimY() + grid_index[1]) * _grid.getGridDimZ() + grid_index[2];
+          new_v += weight * _grid.m_vel[idx];
+          new_C += (weight * _4_invdx2) * _grid.m_vel[idx] * dpos.transpose();
+
+        }
+      }
+    }
+    //h_p_project_ptr[p](F, Jp, C, dt);
+
+
+    h_p_vel_ptr[3 * p + 0] = new_v[0];
+    h_p_vel_ptr[3 * p + 1] = new_v[1];
+    h_p_vel_ptr[3 * p + 2] = new_v[2];
+
+  }
+
+}
+
+void mpm::Engine::addNeighbor(std::vector<int> &unstableParticles, int point_set_id) {
+  CompactNSearch::PointSet const &ps = mNeighborSearch.point_set(point_set_id);
+
+  int size = unstableParticles.size();
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < ps.n_neighbors(point_set_id, unstableParticles[i]); ++j) {
+      // Return PointID of the jth neighbor of the ith particle in the 0th point set.
+      int pid = ps.neighbor(point_set_id, unstableParticles[i], j);
+      unstableParticles.push_back(pid);
+
+    }
+  }
 
 }
 

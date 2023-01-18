@@ -421,7 +421,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
   _currentFrame++;
   _currentTime += dt;
 
-  calculateParticleKineticEnergy();
+
   calculateProspectiveParticleKineticEnergy();
 
   p2gCuda<<<particle_grid_size, particle_block_size>>>(d_p_mass_ptr,
@@ -441,7 +441,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
                                                        _grid.getGridDimX(),
                                                        _grid.getGridDimY(),
                                                        _grid.getGridDimZ());
-
+  calculateEnergy();
   updateGridCuda<<<grid_grid_size, grid_block_size>>>(d_g_mass_ptr,
                                                       d_g_vel_ptr,
                                                       make_float3(_gravity[0], _gravity[1], _gravity[2]),
@@ -468,9 +468,7 @@ void mpm::Engine::integrateWithCuda(Scalar dt) {
 //  logNAN<<<particle_grid_size, particle_block_size>>>(d_p_vel_ptr,d_p_F_ptr,particle_num);
   transferDataFromDevice();
 
-  fmt::print("Particle Kinetic Energy: {}, Particle pros energy:{}\n",
-             mParticleKineticEnergy[_currentFrame],
-             mParticleProspectiveKineticEnergy[_currentFrame]);
+
 
 }
 
