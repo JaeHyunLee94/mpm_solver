@@ -31,7 +31,7 @@ void initEngine(mpm::EngineConfig config) {
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
 
-  entity.loadFromFile("../../assets/armadillo_rot.bgeo");
+  entity.loadFromBgeo("../../assets/armadillo_rot.bgeo");
 
   mpm::Particles particles
       (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(5, 5, 0)); //TODO: rho, initvol

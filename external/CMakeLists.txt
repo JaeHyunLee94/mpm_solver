@@ -24,6 +24,8 @@ add_subdirectory(zlib)
 add_subdirectory(partio)
 
 add_subdirectory(CompactNSearch)
+add_subdirectory(tinyobjloader)
+add_subdirectory(SDFGen)
 #add_subdirectory(boost)
 #SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Users/test/Desktop/github/boost_minimal/boost")
 #SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Users/test/Desktop/github/boost_minimal/libs")

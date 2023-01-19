@@ -35,7 +35,7 @@ void initEngine(mpm::EngineConfig config) {
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
  //entity.loadCube(mpm::Vec3f(0.5, 0.5, 0.5), 0.6, pow(res, 3) / (4*32) * 32);
-  entity.loadFromFile("../../assets/bunny_1.bgeo");
+  entity.loadFromBgeo("../../assets/bunny_1.bgeo");
 
   mpm::Particles
       particles(entity, mpm::MaterialType::WeaklyCompressibleWater, pow(grid_dx * 0.5, 3), 1); //TODO: rho, initvol

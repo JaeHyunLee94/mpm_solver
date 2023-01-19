@@ -35,7 +35,7 @@ void initEngine(mpm::EngineConfig config){
   mpm::Entity entity;
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
-  entity.loadFromFile("../../assets/Sphere.bgeo");
+  entity.loadFromBgeo("../../assets/Sphere.bgeo");
 
   mpm::Particles particles(entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx*0.5,3),1,mpm::Vec3f (0,0,0)); //TODO: rho, initvol
 
