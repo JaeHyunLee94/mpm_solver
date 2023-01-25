@@ -28,7 +28,7 @@ void mpm::Engine::integrate(mpm::Scalar dt) {
   updateGrid(dt);
 
   g2p(dt);
-  fmt::print("{},{}\n", h_p_pros_energy_ptr[1005],h_p_kinetic_energy_ptr[1005]);
+  //fmt::print("{},{}\n", h_p_pros_energy_ptr[1005],h_p_kinetic_energy_ptr[1005]);
 }
 
 #define SQR(x) ((x)*(x))

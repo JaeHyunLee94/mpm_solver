@@ -22,7 +22,8 @@ class Entity {
   void logEntity();
 
  private:
-  void poissonDiskSample(Scalar radius, const ::Vec3f &origin, float dx, int ni, int nj, int nk);
+
+  bool querySDF(float x, float y, float z, ::Vec3f origin, float dx, Array3f &phi_grid);
   bool _isEmpty = true;
   bool _hasMesh= false;
   std::vector<Vec3f> _point_list;

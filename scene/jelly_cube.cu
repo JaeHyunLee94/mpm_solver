@@ -31,8 +31,8 @@ void initEngine(mpm::EngineConfig config) {
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
 //  entity.loadCube(mpm::Vec3f(1, 1, 1), 0.4, 2 * pow(res, 3) / (4 * 32) * 16);
-  //entity.loadFromBgeo("../../assets/cube.bgeo");
-  entity.loadFromObjWithPoissonDiskSampling("../../assets/cube_tri.obj", 1);
+ // entity.loadFromBgeo("../../assets/sphere_z_3.bgeo");
+ entity.loadFromObjWithPoissonDiskSampling("../../assets/cube_tri.obj", 1, 1.f / 64);
   mpm::Particles particles
       (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(0, 0, 0)); //TODO: rho, initvol
 //  for(auto particle : particles.mParticleList){
@@ -41,16 +41,17 @@ void initEngine(mpm::EngineConfig config) {
 //  }
 
   mpm::Vec3f w = mpm::Vec3f(0, 0, 50);
-  for (int i = 0; i < particles.getParticleNum(); i++) {
-//    mpm:: Vec3f r0 = particles.mParticleList[i].m_pos;
-//    r0[0]=1; r0[1]=1;
-//    mpm::Vec3f r = particles.mParticleList[i].m_pos -r0;
-//    mpm::Vec3f v = r.cross(w);
-//    particles.mParticleList[i].m_vel = v;
-    if (particles.mParticleList[i].m_pos.y() > 1.f) particles.mParticleList[i].m_vel[1] += 2.f;
-    else particles.mParticleList[i].m_vel[1] += -2.f;
-
-  }
+//  for (int i = 0; i < particles.getParticleNum(); i++) {
+////    mpm:: Vec3f r0 = particles.mParticleList[i].m_pos;
+////    r0[0]=1; r0[1]=1;
+////    mpm::Vec3f r = particles.mParticleList[i].m_pos -r0;
+////    mpm::Vec3f v = r.cross(w);
+////    particles.mParticleList[i].m_vel = v;
+////    if (particles.mParticleList[i].m_pos.y() > 1.f) particles.mParticleList[i].m_vel[1] += 2.f;
+////    else particles.mParticleList[i].m_vel[1] += -2.f;
+////particles.mParticleList[i].m_F(2,2)=3;
+//
+//  }
   engine->addParticles(particles);
 
 }
@@ -86,11 +87,7 @@ void initGui() {
       })
       .addWidgetText("%d Frame", engine->getCurrentFrame())
       .endGroup()
-//      .startGroup("Energy plotting")
-//      .startPlot("Integration profile")
-//      .addPlotLine("Kinetic Energy", engine->getTimePtr(),engine->getParticleKineticEnergyPtr(),1000)
-//      .endPlot()
-//      .endGroup()
+
       .build();
 }
 void initDevice() {
@@ -103,7 +100,7 @@ void initDevice() {
 void run() {
   while (!glfwWindowShouldClose(renderer->getWindow())) { // hide glfw
 
-    engine->integrate(5e-4);
+    engine->integrate(1e-5);
 
 
 
@@ -123,7 +120,7 @@ int main() {
       mpm::Explicit,
       mpm::Dense,
       mpm::Vec3i(64, 64, 64),
-      2. / 64,
+      2.f / 64,
       1000,
       mpm::Device::GPU
   });
