@@ -6,7 +6,7 @@
 #include <tiny_obj_loader.h>
 #include <Partio.h>
 #include <fmt/core.h>
-void mpm::Entity::loadFromBgeo(const char *filename) {
+void mpm::Entity::loadFromBgeo(const char *filename,float scale_x,float scale_y,float scale_z) {
   // open file
   Partio::ParticlesDataMutable *data = Partio::read(filename);
   if (!data) {
@@ -28,6 +28,7 @@ void mpm::Entity::loadFromBgeo(const char *filename) {
     std::cerr << "Failed to get proper position attribute" << std::endl;
   }
 
+  Vec3f center(0.0f, 0.0f, 0.0f);
   for (int i = 0; i < data->numParticles(); ++i) {
     const float *raw_pos = data->data<float>(posAttr, i);
     _point_list[i] = Vec3f{raw_pos[0], raw_pos[1], raw_pos[2]};

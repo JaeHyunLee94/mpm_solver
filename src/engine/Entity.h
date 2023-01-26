@@ -14,7 +14,7 @@ class Entity {
 
  public:
 
-  void loadFromBgeo(const char *filename);
+  void loadFromBgeo(const char *filename,float scale_x=1.0f,float scale_y=1.0f,float scale_z=1.0f);
   void loadFromObjWithPoissonDiskSampling(const char *filename,Scalar radius,float dx);
   void loadCube(Vec3f center, Scalar len, unsigned int particle_num, bool usePoisson = false);
   void loadSphere(Vec3f center, Scalar radius,unsigned int particle_num, bool usePoisson = false);
