@@ -31,7 +31,7 @@ void initEngine(mpm::EngineConfig config) {
   unsigned int res = engine->getEngineConfig().m_gridResolution[0];
   float grid_dx = engine->getEngineConfig().m_gridCellSize;
 //  entity.loadCube(mpm::Vec3f(1, 1, 1), 0.4, 2 * pow(res, 3) / (4 * 32) * 16);
-  entity.loadFromBgeo("../../assets/sphere_z_2.bgeo");
+  entity.loadFromBgeo("../../assets/sphere_z_3.bgeo");
  //entity.loadFromObjWithPoissonDiskSampling("../../assets/cube_tri.obj", 1, 1.f / 64);
   mpm::Particles particles
       (entity, mpm::MaterialType::CorotatedJelly, pow(grid_dx * 0.5, 3), 1, mpm::Vec3f(0, 0, 0)); //TODO: rho, initvol
@@ -49,7 +49,7 @@ void initEngine(mpm::EngineConfig config) {
 //    particles.mParticleList[i].m_vel = v;
 //    if (particles.mParticleList[i].m_pos.y() > 1.f) particles.mParticleList[i].m_vel[1] += 2.f;
 //    else particles.mParticleList[i].m_vel[1] += -2.f;
-particles.mParticleList[i].m_F(2,2)=2;
+particles.mParticleList[i].m_F(2,2)=3;
 
   }
   engine->addParticles(particles);
