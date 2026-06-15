@@ -53,7 +53,15 @@ endif()
 if(MPM_CUDA_AVAILABLE)
     target_include_directories(engine PUBLIC "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
     target_link_libraries(engine PUBLIC CUDA::cudart)
-    set_target_properties(engine PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    # CUDA_SEPARABLE_COMPILATION lets engine's .cu files reference each other's
+    # device symbols. CUDA_RESOLVE_DEVICE_SYMBOLS makes engine perform its own
+    # device link, so the resulting static lib is self-contained: consumers
+    # (incl. non-CUDA targets like the renderer, or scene exes linking renderer)
+    # can link it without re-running device linking, which otherwise fails with
+    # "undefined reference to __cudaRegisterLinkedBinary_..._SimulationKernel_cu".
+    set_target_properties(engine PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+        CUDA_RESOLVE_DEVICE_SYMBOLS ON)
     # Mark CUDA-specific source files explicitly
     set_source_files_properties(engine/cuda/SimulationKernel.cu PROPERTIES LANGUAGE CUDA)
 endif()

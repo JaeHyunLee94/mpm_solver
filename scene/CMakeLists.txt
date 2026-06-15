@@ -12,23 +12,26 @@ macro(add_scene TARGET SOURCE)
         $<$<BOOL:${MPM_DISPLAY_AVAILABLE}>:MPM_DISPLAY_AVAILABLE>
     )
 
-    if(MPM_CUDA_AVAILABLE)
-        # Compile the scene file as CUDA so it can call CUDA APIs directly
-        set_source_files_properties(${SOURCE} PROPERTIES LANGUAGE CUDA)
-        set_target_properties(${TARGET} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-        target_compile_options(${TARGET} PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
-        )
-    else()
-        # No CUDA: treat the .cu file as plain C++.
-        # LANGUAGE CXX picks the right compiler, but GCC still routes any file
-        # with an unrecognised extension (.cu) to the linker unless we force
-        # the language explicitly with -x c++.
-        set_source_files_properties(${SOURCE} PROPERTIES
-            LANGUAGE      CXX
-            COMPILE_FLAGS "-x c++"
-        )
-    endif()
+    # Scenes are host-only translation units: they call the engine's host API
+    # and contain no __global__/__device__ code or kernel launches. Compile them
+    # as plain C++ on EVERY configuration so they never take part in CUDA device
+    # linking — all device code lives in (and is device-linked by) the engine
+    # library (see CUDA_RESOLVE_DEVICE_SYMBOLS in src/CMakeLists.txt). Mixing a
+    # device-resolved CUDA lib with separately-device-linked CUDA executables
+    # otherwise breaks the link (duplicate/missing __cudaRegisterLinkedBinary).
+    #
+    # The CUDA runtime headers reached through Engine.h are host-parseable (the
+    # __device__/__forceinline__ decorators are macros, and there are no <<<>>>
+    # launches in headers). The CUDA toolkit include path and cudart propagate
+    # transitively from the linked `engine` target.
+    #
+    # GCC does not recognise the .cu extension as C++, so it would route the file
+    # straight to the linker (unused-input / missing-object errors) unless we
+    # force the language explicitly with -x c++.
+    set_source_files_properties(${SOURCE} PROPERTIES
+        LANGUAGE      CXX
+        COMPILE_FLAGS "-x c++"
+    )
 
     if(MPM_DISPLAY_AVAILABLE)
         target_link_libraries(${TARGET} PUBLIC renderer engine imgui glfw)
